@@ -1043,6 +1043,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
       <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden"><div id="rBar" style="height:100%;width:0;background:var(--accent)"></div></div>
       <div id="rInfo" class="small" style="color:var(--dim);margin-top:4px"></div>
       <div id="rWhere" class="small" style="color:var(--dim);margin-top:4px"></div>
+      <div id="rSnd" class="small" style="color:var(--dim);margin-top:4px">The rendered sound is the loaded track only. Sampler sounds, the mic and anything played live are not in an offline render: use Record to capture those.</div>
     </div>
 
     <h2>Help</h2>
@@ -3890,7 +3891,8 @@ async function pickVideoCodec(w,h,fps,bitrate){
   return null;
 }
 async function pickAudioCodec(ch){
-  for (const [codec,mux,br] of [['mp4a.40.2','aac',320000],['opus','opus',256000]]){
+  // AAC first (plays everywhere). Windows only takes certain AAC bitrates, so try a few before Opus.
+  for (const [codec,mux,br] of [['mp4a.40.2','aac',320000],['mp4a.40.2','aac',256000],['mp4a.40.2','aac',192000],['mp4a.40.2','aac',128000],['opus','opus',256000],['opus','opus',128000]]){
     const cfg={codec,sampleRate:48000,numberOfChannels:ch,bitrate:br};
     try{ if ((await AudioEncoder.isConfigSupported(cfg)).supported) return {cfg,mux}; }catch(e){}
   }
@@ -3931,18 +3933,20 @@ async function renderOffline(){
       abuf=await EM_mixAudio(buf,snaps,fps); ch=Math.min(2,abuf.numberOfChannels); }
     const vc=await pickVideoCodec(W,H,fps,bitrate); if(!vc) throw new Error('This browser cannot encode video at '+W+'×'+H+'.');
     const ac=await pickAudioCodec(ch); if(!ac) throw new Error('This browser cannot encode audio.');
+    const s0=Math.round(t0*sr), s1=Math.round(t1*sr);
     const target = writable ? new Mp4Muxer.FileSystemWritableFileStreamTarget(writable) : new Mp4Muxer.ArrayBufferTarget();
     const muxer=new Mp4Muxer.Muxer({target, fastStart: writable?false:'in-memory', firstTimestampBehavior:'offset',
       video:{codec:vc.mux,width:W,height:H,frameRate:fps}, audio:{codec:ac.mux,numberOfChannels:ch,sampleRate:sr}});
     let encErr=null;
     vEnc=new VideoEncoder({output:(c,m)=>muxer.addVideoChunk(c,m), error:e=>encErr=e}); vEnc.configure(vc.cfg);
-    aEnc=new AudioEncoder({output:(c,m)=>muxer.addAudioChunk(c,m), error:e=>encErr=e}); aEnc.configure(ac.cfg);
+    let aChunks=0, aPeak=0; const wav = ac.mux==='opus' ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
+    aEnc=new AudioEncoder({output:(c,m)=>{ aChunks++; muxer.addAudioChunk(c,m); }, error:e=>encErr=e}); aEnc.configure(ac.cfg);
     // reset state for a reproducible render
     canvas.width=W; canvas.height=H; allocFB(); fitCanvas();
     rnd=seededRandom(+$('rSeed').value||1); resetAnalysis(); seed=0; resetRing(); lastDrawNow=0; lastCutAt=-1e9; stut.until=-1;
     L.main=L.prev=L.ovl=null; seqIdx={main:0,ovl:0}; vnow=0; L.fadeStart=0;
     cut('main'); cut('ovl');
-    const dt=1/fps, s0=Math.round(t0*sr), s1=Math.round(t1*sr); let aPos=s0;
+    const dt=1/fps; let aPos=s0;
     const started=performance.now();
     for (let f=0; f<f1; f++){
       if (rCancel) throw new Error('cancelled');
@@ -3964,6 +3968,8 @@ async function renderOffline(){
       while (aPos<aTo){ const n=Math.min(4800,aTo-aPos), data=new Float32Array(n*ch);
         for (let c=0;c<ch;c++) data.set(abuf.getChannelData(c).subarray(aPos,aPos+n), c*n);
         const ad=new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:n,numberOfChannels:ch,timestamp:Math.round((aPos-s0)*1e6/sr),data});
+        for (let i=0;i<data.length;i++){ const a=Math.abs(data[i]); if (a>aPeak) aPeak=a; }
+        if (wav) for (let c=0;c<ch;c++) for (let i=0;i<n;i++){ const v=Math.max(-1,Math.min(1,data[c*n+i])); wav[(aPos-s0+i)*ch+c]=v<0?v*32768:v*32767; }
         aEnc.encode(ad); ad.close(); aPos+=n; }
       while (vEnc.encodeQueueSize>4) await new Promise(r=>setTimeout(r,2));
       const done=f-f0+1;
@@ -3975,10 +3981,18 @@ async function renderOffline(){
       }
     }
     info.textContent='Finishing file…';
-    await vEnc.flush(); await aEnc.flush(); muxer.finalize();
-    if (writable){ await writable.close(); info.textContent=`Saved ${fname} (${total} frames, ${W}×${H} @ ${fps}fps).`; }
+    await vEnc.flush(); await aEnc.flush();
+    if (!aChunks) throw new Error('the sound encoder produced nothing, so the file would be silent. Try Record instead, or another browser.');
+    muxer.finalize();
+    const sndNote = aPeak<1e-4 ? ' Note: the track is silent in this range (check the track volume, mute or solo).'
+      : ac.mux==='opus' ? ' Sound is Opus because this browser cannot make AAC: QuickTime, iPhone Photos and some editors play it silent, so the sound is also saved as a WAV next to it (Chrome and VLC play the MP4 fine).' : ' Sound: AAC.';
+    if (wav){ const hd=new DataView(new ArrayBuffer(44)), w=(o,t)=>{ for (let i=0;i<t.length;i++) hd.setUint8(o+i,t.charCodeAt(i)); };
+      w(0,'RIFF'); hd.setUint32(4,36+wav.byteLength,true); w(8,'WAVEfmt '); hd.setUint32(16,16,true); hd.setUint16(20,1,true); hd.setUint16(22,ch,true);
+      hd.setUint32(24,sr,true); hd.setUint32(28,sr*ch*2,true); hd.setUint16(32,ch*2,true); hd.setUint16(34,16,true); w(36,'data'); hd.setUint32(40,wav.byteLength,true);
+      const wa=document.createElement('a'); wa.href=URL.createObjectURL(new Blob([hd,wav],{type:'audio/wav'})); wa.download=fname.replace(/\.mp4$/i,'')+' - sound.wav'; setTimeout(()=>wa.click(),600); }
+    if (writable){ await writable.close(); info.textContent=`Saved ${fname} (${total} frames, ${W}×${H} @ ${fps}fps).`+sndNote; }
     else { const blob=new Blob([target.buffer],{type:'video/mp4'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; a.click();
-      info.textContent=`Downloaded ${fname} (${(blob.size/1e6).toFixed(1)} MB, ${total} frames).`; }
+      info.textContent=`Downloaded ${fname} (${(blob.size/1e6).toFixed(1)} MB, ${total} frames).`+sndNote; }
     ok=true;
   }catch(e){
     info.textContent = e.message==='cancelled' ? 'Render cancelled.' : 'Render failed: '+(e.message||e);
