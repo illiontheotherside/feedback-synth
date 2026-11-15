@@ -478,9 +478,9 @@ W.combo=[
   {el:'#vsmSec',tab:'visuals',t:'Sampler (video + sound)',b:`<p>Load or record a clip; it is cut at its hits and plays picture, sound or both.</p>`},
   {el:'#maps',tab:'visuals',t:'Mapping',b:`<p>Choose which sound feature moves which picture setting.</p>`}]},
  {name:'Record & render',sub:'Save what you made',steps:[
-  {el:'#lRecVid',tab:'loop',t:'Record video',b:`<p>Records the visuals with the sound, live.</p>`},
-  {el:'#lRecWav',tab:'loop',t:'Record WAV',b:`<p>Records just the sound.</p>`},
-  {el:'#rSize',tab:'visuals',t:'Offline render',b:`<p>Renders a track's visuals at full quality (desktop Chrome or Edge). Quick preview sizes are fastest.</p>`}]}
+  {el:'#lRecVid',tab:'mix',t:'Record video',b:`<p>Records the visuals with the sound, live.</p>`},
+  {el:'#lRecWav',tab:'mix',t:'Record WAV',b:`<p>Records just the sound.</p>`},
+  {el:'#rSize',tab:'mix',t:'Offline render',b:`<p>Renders a track's visuals at full quality (desktop Chrome or Edge). Quick preview sizes are fastest.</p>`}]}
 ];
 W.mix=[
  {name:'Mixing basics',sub:'The console and the video mixer',steps:[
@@ -1039,11 +1039,15 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
         <input id="rEnd" type="number" min="0" step="0.1" placeholder="end" style="width:70px"></div>
       <div class="row"><label class="small" style="width:70px">Seed</label>
         <input id="rSeed" type="number" value="1" style="width:80px"><span class="small" style="color:var(--dim)">same seed = same edit</span></div>
+      <div class="row"><label class="small" style="width:70px">Sound</label>
+        <select id="rSound"><option value="track">Loaded track (exact, through the console)</option><option value="take">Live take (everything you hear + mic)</option></select></div>
+      <div class="row" id="takeRow"><button id="takeBtn" class="rec" title="Plays the track from the range start and records the console's output until you press Stop or the track ends">● Record live take</button><button id="takePlay" disabled>▶ Play take</button></div>
+      <div id="takeInfo" class="small" style="color:var(--dim)">Loaded track: renders exactly, through its console strip. Live take: press Record live take, play the synth, samplers, clips and mic while the track plays, then Render. The take is everything the console sends out (the Mic strip included), so set the mix with the faders first.</div>
       <div class="row"><button id="renderBtn" class="primary">Render MP4</button><button id="renderCancel" disabled>Cancel</button></div>
       <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden"><div id="rBar" style="height:100%;width:0;background:var(--accent)"></div></div>
       <div id="rInfo" class="small" style="color:var(--dim);margin-top:4px"></div>
       <div id="rWhere" class="small" style="color:var(--dim);margin-top:4px"></div>
-      <div id="rSnd" class="small" style="color:var(--dim);margin-top:4px">The rendered sound is the loaded track only. Sampler sounds, the mic and anything played live are not in an offline render: use Record to capture those.</div>
+      
     </div>
 
     <h2>Help</h2>
@@ -3320,7 +3324,7 @@ async function startMic(){
   try{
     const dev=$('inDev').value; micStream = await navigator.mediaDevices.getUserMedia({audio:{deviceId:dev?{exact:dev}:undefined,echoCancellation:false,noiseSuppression:false,autoGainControl:false}}); listInputs();
   }catch(e){ $('trackName').textContent='Microphone not available: '+e.message; return; }
-  player.pause(); micSrc = actx.createMediaStreamSource(micStream); micSrc.connect(inTap); micSrc.connect(recDest);
+  player.pause(); micSrc = actx.createMediaStreamSource(micStream); micSrc.connect(inTap); { const st=window.EM_micStrip?EM_micStrip(actx):null; if (st) micSrc.connect(st.in); else micSrc.connect(recDest); }
   usingMic=true; $('micBtn').textContent='Stop live input'; $('trackName').textContent='Live input'; $('hint').style.display='none';
   for(const m of pool) if(m.type==='video' && (m===L.main||m===L.ovl)) m.el.play().catch(()=>{});
 }
@@ -3902,10 +3906,13 @@ async function pickAudioCodec(ch){
 async function renderOffline(){
   const info=$('rInfo'), bar=$('rBar');
   if (!window.VideoEncoder || !window.AudioEncoder){ info.textContent='Offline rendering needs Chrome or Edge (version 94+), or Safari 17+.'; return; }
-  if (!trackFile){ info.textContent='Load a track first.'; return; }
+  // a recorded live take (mixing/rig builds) replaces the track as the render's sound; false = take chosen but none recorded
+  const TK=window.EM_take?EM_take():null;
+  if (TK===false){ info.textContent='Record a live take first (Sound for render › Live take).'; return; }
+  if (!trackFile && !TK){ info.textContent='Load a track first.'; return; }
   const [W,H]=$('rSize').value.split('x').map(Number), fps=+$('rFps').value, bpp=+$('rQual').value;
   const bitrate=Math.min(120e6, Math.round(W*H*fps*bpp));
-  const base=trackFile.name.replace(/\.[^.]+$/,'').replace(/[^\w\- ]+/g,'').trim()||'visuals';
+  const base=TK?'live take':trackFile.name.replace(/\.[^.]+$/,'').replace(/[^\w\- ]+/g,'').trim()||'visuals';
   const nm=($('rName').value||'').replace(/\.mp4$/i,'').replace(/[\\/:*?"<>|]+/g,'').trim();
   const fname=(nm||`${base} - visuals ${W}x${H} ${fps}fps`)+'.mp4';
   // ask where to save first (needs the click), stream straight to disk when the browser allows it
@@ -3920,13 +3927,13 @@ async function renderOffline(){
   let vEnc=null, aEnc=null, ok=false;
   try{
     info.textContent='Decoding audio…';
-    if (!decodedTrack){ const dctx=new OfflineAudioContext(2, 48000, 48000); decodedTrack=await dctx.decodeAudioData(await trackFile.arrayBuffer()); }
-    const buf=decodedTrack, sr=buf.sampleRate, dur=buf.duration; let ch=Math.min(2,buf.numberOfChannels);
+    if (!TK && !decodedTrack){ const dctx=new OfflineAudioContext(2, 48000, 48000); decodedTrack=await dctx.decodeAudioData(await trackFile.arrayBuffer()); }
+    const buf=TK||decodedTrack, sr=buf.sampleRate, dur=buf.duration; let ch=Math.min(2,buf.numberOfChannels);
     const mono=new Float32Array(buf.length); for (let c=0;c<buf.numberOfChannels;c++){ const d=buf.getChannelData(c); for (let i=0;i<d.length;i++) mono[i]+=d[i]/buf.numberOfChannels; }
     const t0=Math.max(0,Math.min(dur,+$('rStart').value||0)), t1=Math.max(t0, Math.min(dur, $('rEnd').value===''?dur:+$('rEnd').value));
     const f0=Math.round(t0*fps), f1=Math.round(t1*fps), total=f1-f0;
     if (total<1) throw new Error('Range is empty.');
-    let abuf=buf; if (window.EM_mixAudio){ info.textContent='Mixing audio…'; let snaps=null;
+    let abuf=buf; if (window.EM_mixAudio && !TK){ info.textContent='Mixing audio…'; let snaps=null;
       if (EM_mixNeedsSnaps()){ const ob=onBeat, oo=onOnset, or=rnd; onBeat=onOnset=null; rnd=seededRandom(1); resetAnalysis(); snaps=[];
         for (let f=0;f<f1;f++){ vnow=f*1000/fps; analyseAt(mono,sr,f/fps,1/fps); snaps.push(Object.assign({},A)); }
         onBeat=ob; onOnset=oo; rnd=or; resetAnalysis(); vnow=0; }
@@ -3939,8 +3946,30 @@ async function renderOffline(){
       video:{codec:vc.mux,width:W,height:H,frameRate:fps}, audio:{codec:ac.mux,numberOfChannels:ch,sampleRate:sr}});
     let encErr=null;
     vEnc=new VideoEncoder({output:(c,m)=>muxer.addVideoChunk(c,m), error:e=>encErr=e}); vEnc.configure(vc.cfg);
-    let aChunks=0, aPeak=0; const wav = ac.mux==='opus' ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
-    aEnc=new AudioEncoder({output:(c,m)=>{ aChunks++; muxer.addAudioChunk(c,m); }, error:e=>encErr=e}); aEnc.configure(ac.cfg);
+    // Safari/iPhone (WebKit) encoders: keep a WAV copy too, in case its AAC still won't play somewhere
+    const WK=/AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
+    let aChunks=0, aPeak=0; const wav = (ac.mux==='opus'||WK) ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
+    // AAC packaging that doesn't trust the encoder's metadata: WebKit can leave out the AudioSpecificConfig
+    // (the MP4 then has an unplayable, silent sound track) or hand out ADTS-framed packets.
+    const SRI=[96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350];
+    const asc=(aot,sri,chn)=>new Uint8Array([(aot<<3)|(sri>>1), ((sri&1)<<7)|(chn<<3)]);
+    let aCfgSent=false, aNext=0; const aFrameUs=1024*1e6/sr;
+    const aOut=(c,m)=>{ aChunks++;
+      if (ac.mux!=='aac'){ muxer.addAudioChunk(c,m); return; }
+      let d=new Uint8Array(c.byteLength); c.copyTo(d);
+      let cfgAsc=null;
+      if (d.length>7 && d[0]===0xFF && (d[1]&0xF0)===0xF0){ // ADTS header: strip it, read the config from it
+        const aot=((d[2]>>6)&3)+1, sri=(d[2]>>2)&15, chn=((d[2]&1)<<2)|(d[3]>>6), hl=(d[1]&1)?7:9;
+        cfgAsc=asc(aot,sri,chn||ch); d=d.subarray(hl); }
+      let meta;
+      if (!aCfgSent){ const dc=(m&&m.decoderConfig)||{}; let desc=dc.description;
+        const dl=desc ? (desc.byteLength||0) : 0;
+        if (cfgAsc) desc=cfgAsc; else if (dl<2) desc=asc(2,Math.max(0,SRI.indexOf(sr)),ch);
+        meta={decoderConfig:{codec:'mp4a.40.2', sampleRate:sr, numberOfChannels:ch, description:desc}}; aCfgSent=true; }
+      let ts=c.timestamp; if (!(ts>=0) || ts<aNext-aFrameUs*.5) ts=aNext;
+      const du=(c.duration>0)?c.duration:aFrameUs; aNext=ts+du;
+      muxer.addAudioChunkRaw(d, c.type||'key', ts, du, meta); };
+    aEnc=new AudioEncoder({output:aOut, error:e=>encErr=e}); aEnc.configure(ac.cfg);
     // reset state for a reproducible render
     canvas.width=W; canvas.height=H; allocFB(); fitCanvas();
     rnd=seededRandom(+$('rSeed').value||1); resetAnalysis(); seed=0; resetRing(); lastDrawNow=0; lastCutAt=-1e9; stut.until=-1;
@@ -3985,7 +4014,8 @@ async function renderOffline(){
     if (!aChunks) throw new Error('the sound encoder produced nothing, so the file would be silent. Try Record instead, or another browser.');
     muxer.finalize();
     const sndNote = aPeak<1e-4 ? ' Note: the track is silent in this range (check the track volume, mute or solo).'
-      : ac.mux==='opus' ? ' Sound is Opus because this browser cannot make AAC: QuickTime, iPhone Photos and some editors play it silent, so the sound is also saved as a WAV next to it (Chrome and VLC play the MP4 fine).' : ' Sound: AAC.';
+      : ac.mux==='opus' ? ' Sound is Opus because this browser cannot make AAC: QuickTime, iPhone Photos and some editors play it silent, so the sound is also saved as a WAV next to it (Chrome and VLC play the MP4 fine).'
+      : WK ? ' Sound: AAC. A WAV copy of the sound is saved too, in case the video plays silent.' : ' Sound: AAC.';
     if (wav){ const hd=new DataView(new ArrayBuffer(44)), w=(o,t)=>{ for (let i=0;i<t.length;i++) hd.setUint8(o+i,t.charCodeAt(i)); };
       w(0,'RIFF'); hd.setUint32(4,36+wav.byteLength,true); w(8,'WAVEfmt '); hd.setUint32(16,16,true); hd.setUint16(20,1,true); hd.setUint16(22,ch,true);
       hd.setUint32(24,sr,true); hd.setUint32(28,sr*ch*2,true); hd.setUint16(32,ch*2,true); hd.setUint16(34,16,true); w(36,'data'); hd.setUint32(40,wav.byteLength,true);
@@ -6050,15 +6080,16 @@ camRow.appendChild(flip);
 
 // saving recordings: also offer the share sheet (Save Video / Save to Files) where available
 const toast=document.createElement('div'); toast.id='mtoast'; toast.innerHTML='<span></span><button class="primary">Save / share</button><button>✕</button>'; document.body.appendChild(toast);
-let pending=null;
-toast.querySelector('.primary').onclick=async()=>{ if (!pending) return; try{ await navigator.share({files:[pending]}); }catch(e){} toast.classList.remove('on'); };
-toast.querySelector('button:last-child').onclick=()=>toast.classList.remove('on');
+let q=[], seq=0; // several files (render MP4 + its WAV): offer them one at a time
+const showQ=()=>{ if (!q.length){ toast.classList.remove('on'); return; } toast.querySelector('span').textContent='Saved '+q[0].name+'. To put it in Photos or Files:'+(q.length>1?' ('+q.length+' files, one at a time)':''); toast.classList.add('on'); };
+toast.querySelector('.primary').onclick=async()=>{ const f=q.shift(); if (!f) return; try{ await navigator.share({files:[f]}); }catch(e){} showQ(); };
+toast.querySelector('button:last-child').onclick=()=>{ q.shift(); showQ(); };
 const origClick=HTMLAnchorElement.prototype.click;
 HTMLAnchorElement.prototype.click=function(){
   if (this.download && this.href.startsWith('blob:') && navigator.canShare){
-    const name=this.download, href=this.href;
+    const name=this.download, href=this.href, my=seq++;
     fetch(href).then(r=>r.blob()).then(b=>{ const f=new File([b],name,{type:b.type||'application/octet-stream'});
-      if (navigator.canShare({files:[f]})){ pending=f; toast.querySelector('span').textContent='Saved '+name+'. To put it in Photos or Files:'; toast.classList.add('on'); } }).catch(()=>{});
+      if (navigator.canShare({files:[f]})){ f._s=my; q.push(f); q.sort((x,y)=>x._s-y._s); showQ(); } }).catch(()=>{});
   }
   return origClick.call(this);
 };
@@ -6112,7 +6143,7 @@ function sig(k){ try{
 const CH=[
  ['as-arp','Score','syn'],['as-pad','Pad','syn'],['as-spec','Spectral','syn'],['as-drum','Drums','syn'],['as-noise','Noise','syn'],
  ['as-smp','Sampler 1','syn'],['as-smp2','Sampler 2','syn'],['as-smp3','Sampler 3','syn'],
- ['track','Track','trk'],['vsm1','Clip 1','vid'],['vsm2','Clip 2','vid'],['vsm3','Clip 3','vid'],['master','Master','mst']
+ ['track','Track','trk'],['mic','Mic','trk'],['vsm1','Clip 1','vid'],['vsm2','Clip 2','vid'],['vsm3','Clip 3','vid'],['master','Master','mst']
 ];
 const BANDS=[{t:'lowshelf',f:120,q:.7},{t:'peaking',f:500,q:1},{t:'peaking',f:2500,q:1},{t:'highshelf',f:8000,q:.7}];
 const f2n=f=>Math.log(f/20)/Math.log(1000), n2f=n=>20*Math.pow(1000,n);   // 20 Hz .. 20 kHz
@@ -6154,7 +6185,7 @@ AudioNode.prototype.connect=function(t,...r){
     if (t && t.context && !(t.context instanceof (window.OfflineAudioContext||function(){}))){
       if (t===t.context.destination && this!==(MASTER&&MASTER.out)){ const m=ensureMaster(t.context); return oconnect.call(this,m.in,...r) && t; }
       if (window.MediaStreamAudioDestinationNode && t instanceof MediaStreamAudioDestinationNode && !(MASTER&&this===MASTER.out)){
-        if (!RECS.has(t)){ RECS.add(t); if (MASTER) oconnect.call(MASTER.out,t); } return t; }
+        if (!RECS.has(t)){ RECS.add(t); if (MASTER) oconnect.call(MASTER.out,t); if (ST.mic&&ST.mic.n) oconnect.call(ST.mic.n.out,t); } return t; }
     }
   }catch(e){}
   return oconnect.call(this,t,...r);
@@ -6362,13 +6393,74 @@ let mf=0; function tick(){ mf++;
   if (mf%3===0 && SAVE.auto.some(a=>a.ch===SEL)){ drawEq(); syncBands(); }
   requestAnimationFrame(tick); }
 
+/* ---------- live input strip + live take ---------- */
+// Mic: its own strip that feeds recordings and live takes but not the speakers (no feedback through the room)
+window.EM_micStrip=ctx=>{ const s=ST.mic; if (!s) return null; ensureMaster(ctx);
+  if (!s.n){ s.n=mkStrip(ctx,'mic'); for (const r of RECS) oconnect.call(s.n.out,r); if (TK.sum) oconnect.call(s.n.out,TK.sum); apply('mic'); s.ui.el.classList.add('live'); }
+  return s.n; };
+// Live take: a real-time pass of everything the console sends out (master) plus the Mic strip, used by Render instead of the track
+const TK={buf:null, rec:false, L:[], R:[], n:0, sum:null, proc:null, src:null};
+const $d=id=>document.getElementById(id);
+window.EM_take=()=>{ const sel=$d('rSound'); if (!sel || sel.value!=='take') return null; return TK.buf||false; };
+function takeTap(ctx){ if (TK.sum) return; TK.sum=ctx.createGain(); TK.proc=ctx.createScriptProcessor(4096,2,2);
+  oconnect.call(ensureMaster(ctx).out,TK.sum); if (ST.mic&&ST.mic.n) oconnect.call(ST.mic.n.out,TK.sum);
+  oconnect.call(TK.sum,TK.proc); const z=ctx.createGain(); z.gain.value=0; oconnect.call(TK.proc,z); oconnect.call(z,ctx.destination);
+  TK.proc.onaudioprocess=e=>{ if (!TK.rec) return; const ib=e.inputBuffer; TK.L.push(new Float32Array(ib.getChannelData(0))); TK.R.push(new Float32Array(ib.getChannelData(ib.numberOfChannels>1?1:0))); TK.n+=ib.length; }; }
+const fmtS=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+let takeT=0;
+async function takeStart(){
+  if (TK.prev){ $d('rStart').value=TK.prev[0]; $d('rEnd').value=TK.prev[1]; TK.prev=null; }
+  if (typeof ensureAudio==='function') ensureAudio(); const ctx=window.actx||(typeof actx!=='undefined'?actx:null); if (!ctx) return;
+  try{ await ctx.resume(); }catch(e){}
+  takeTap(ctx); TK.L=[]; TK.R=[]; TK.n=0; TK.rec=true;
+  const b=$d('takeBtn'); b.textContent='■ Stop take'; b.classList.add('on'); $d('takePlay').disabled=true;
+  if (typeof player!=='undefined' && player.src && !(typeof usingMic!=='undefined' && usingMic)){ const t0=+$d('rStart').value||0; try{ player.currentTime=t0; }catch(e){} try{ await player.play(); }catch(e){} }
+  clearInterval(takeT); takeT=setInterval(()=>{ $d('takeInfo').textContent='Recording live take… '+fmtS(TK.n/ctx.sampleRate)+'. Play away; press Stop take when done.';
+    const tEnd=$d('rEnd').value; if (tEnd!=='' && typeof player!=='undefined' && !player.paused && player.currentTime>=+tEnd) takeStop(); },250);
+}
+async function takeStop(){ if (!TK.rec) return; TK.rec=false; clearInterval(takeT);
+  const b=$d('takeBtn'); b.textContent='● Record live take'; b.classList.remove('on');
+  if (typeof player!=='undefined' && !player.paused) player.pause();
+  const ctx=TK.proc.context, sr=ctx.sampleRate, n=TK.n;
+  if (n<sr*.25){ $d('takeInfo').textContent='That take was too short. Try again.'; return; }
+  $d('takeInfo').textContent='Preparing take…';
+  const raw=new AudioBuffer({length:n,numberOfChannels:2,sampleRate:sr}); let o=0;
+  for (let i=0;i<TK.L.length;i++){ raw.copyToChannel(TK.L[i],0,o); raw.copyToChannel(TK.R[i],1,o); o+=TK.L[i].length; }
+  TK.L=[]; TK.R=[];
+  let buf=raw; if (sr!==48000){ const oc=new OfflineAudioContext(2,Math.ceil(n*48000/sr),48000); const s=oc.createBufferSource(); s.buffer=raw; s.connect(oc.destination); s.start(); buf=await oc.startRendering(); }
+  let pk=0; for (let c=0;c<2;c++){ const d=buf.getChannelData(c); for (let i=0;i<d.length;i+=7){ const a=Math.abs(d[i]); if (a>pk) pk=a; } }
+  TK.buf=buf; $d('takePlay').disabled=false; $d('rSound').value='take';
+  // the take starts at 0: keep the track's range aside and render the whole take
+  if (!TK.prev) TK.prev=[$d('rStart').value,$d('rEnd').value]; $d('rStart').value=0; $d('rEnd').value='';
+  $d('takeInfo').textContent='Live take ready: '+fmtS(buf.duration)+(pk<1e-4?' (silent: is the master muted?)':'')+'. Render now uses it; the range counts from the start of the take.';
+}
+function takeInit(){ const b=$d('takeBtn'); if (!b) return;
+  b.onclick=()=>TK.rec?takeStop():takeStart();
+  $d('rSound').addEventListener('change',e=>{ if (e.target.value==='track' && TK.prev){ $d('rStart').value=TK.prev[0]; $d('rEnd').value=TK.prev[1]; TK.prev=null; }
+    else if (e.target.value==='take' && TK.buf && !TK.prev){ TK.prev=[$d('rStart').value,$d('rEnd').value]; $d('rStart').value=0; $d('rEnd').value=''; } });
+  $d('takePlay').onclick=()=>{ if (!TK.buf) return; const ctx=TK.proc.context;
+    if (TK.src){ try{ TK.src.stop(); }catch(e){} TK.src=null; $d('takePlay').textContent='▶ Play take'; return; }
+    const s=ctx.createBufferSource(); s.buffer=TK.buf; oconnect.call(s,ctx.destination); s.onended=()=>{ if (TK.src===s){ TK.src=null; $d('takePlay').textContent='▶ Play take'; } };
+    s.start(); TK.src=s; $d('takePlay').textContent='■ Stop'; };
+  if (typeof player!=='undefined') player.addEventListener('ended',()=>takeStop());
+}
+
+// Record and Offline render live on the console (after the audio console, before the video mixer)
+function moveRecRender(){
+  const vx=$d('vxSec'); if (!vx) return; const vh=vx.previousElementSibling; const at=(vh&&vh.tagName==='H2')?vh:vx;
+  const pair=el=>{ const sec=el&&el.closest('.sec'); if (!sec) return null; let h=sec.previousElementSibling; while (h && h.tagName!=='H2') h=h.previousElementSibling; return [h,sec]; };
+  for (const [id,title] of [['lRecVid','Record'],['renderBtn','Offline render (high quality)']]){
+    const p=pair($d(id)); if (!p) continue; const [h,sec]=p;
+    if (h){ h.textContent=title; at.parentNode.insertBefore(h,at); } at.parentNode.insertBefore(sec,at); }
+}
+
 /* ---------- wire up ---------- */
 function init(){
   const box=$m('mxStrips'); if (!box) return;
   for (const [id,name,grp] of CH) box.append(buildStrip(id,name,grp));
   $m('mxASrc').innerHTML=SRC.filter(s=>s[0]!=='none').map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
   $m('mxAAdd').onclick=()=>{ SAVE.auto.push({ch:SEL,p:$m('mxAParam').value,src:$m('mxASrc').value,amt:+$m('mxAAmt').value}); save(); listAuto(); };
-  applyAll(); select('master');
+  applyAll(); select('master'); takeInit(); moveRecRender();
   // video mixer controls
   const opt=L=>L.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
   $m('vxA').innerHTML=opt(VS); $m('vxB').innerHTML=opt(VS); $m('vxTr').innerHTML=opt(TR); $m('vxTSrc').innerHTML=opt(SRC.map(s=>s[0]==='none'?['none','T-bar follows: nothing']:s));
