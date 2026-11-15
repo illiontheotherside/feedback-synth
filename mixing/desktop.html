@@ -376,9 +376,11 @@ W.video=[
   {el:'details.mod2',t:'More looks',b:`<p>Lens, pixel drift, analog video and motion effects live in these folds. ${tap} one open to explore.</p>`}]},
  {name:'Record & render',sub:'Save a video',steps:[
   {el:'#recBtn',t:'Record live',b:`<p><em>Record</em> captures what you see and hear in real time, tweaks included. Good for jams.</p>`},
-  {el:'#rSize',t:'Offline render',b:`<p>For a clean, full-quality video of the whole song. Pick a size: <em>quick preview</em> sizes are fastest, 4K is slowest.</p>`},
+  {el:'#rSize',t:'Offline render',b:`<p>For a clean, full-quality video of the whole song, frame by frame. It doesn't play out loud while it works. Pick a size: <em>quick preview</em> sizes are fastest, 4K is slowest.</p>`},
+  {el:'#rSound',t:'Sound for the render',b:`<p><em>Loaded track</em> renders the song exactly. <em>Live take</em> uses a recording of everything you played live instead.</p>`},
+  {el:'#takeBtn',t:'Record a live take',b:`<p>Plays the track and records the whole mix (synth, samplers, clips and mic) until you press Stop. Then Render uses it.</p>`},
   {el:'#rName',t:'Name it',b:`<p>Type a file name.</p>`},
-  {el:'#renderBtn',t:'Render',b:`<p>${window.showSaveFilePicker?'You choose where to save first, then it renders straight into that file.':'The video is saved to your Downloads folder when it finishes.'} You can cancel at any time.</p>`}]},
+  {el:'#renderBtn',t:'Render',b:`<p>${window.showSaveFilePicker?'You choose where to save first, then it renders straight into that file.':phone?'When it finishes, tap <em>Save / share</em> to put the video in Photos or Files.':'The video is saved to your Downloads folder when it finishes.'} You can cancel at any time.</p>`}]},
  {name:'Live performance',sub:'Play it like an instrument',steps:[
   {el:'#perf',t:'Live performance',b:`<p>Buttons for playing live: <em>Cut</em>, <em>Flash</em>, tap tempo, master intensity and quick scenes.</p>`},
   {el:'#tapBtn',t:'Tap tempo',b:`<p>Tap along with live music so the cuts lock to the band.</p>`},
@@ -426,25 +428,39 @@ W.combo=[
   {el:'#vsmSec',tab:'visuals',t:'Sampler (video + sound)',b:`<p>Load or record a clip; it is cut at its hits and plays picture, sound or both.</p>`},
   {el:'#maps',tab:'visuals',t:'Mapping',b:`<p>Choose which sound feature moves which picture setting.</p>`}]},
  {name:'Record & render',sub:'Save what you made',steps:[
-  {el:'#lRecVid',tab:'mix',t:'Record video',b:`<p>Records the visuals with the sound, live.</p>`},
-  {el:'#lRecWav',tab:'mix',t:'Record WAV',b:`<p>Records just the sound.</p>`},
-  {el:'#rSize',tab:'mix',t:'Offline render',b:`<p>Renders a track's visuals at full quality (desktop Chrome or Edge). Quick preview sizes are fastest.</p>`}]}
+  {el:'#lRecVid',tab:'mix',t:'Record video',b:`<p>Records the picture with all the sound, live, tweaks included.</p>`},
+  {el:'#lRecWav',tab:'mix',t:'Record WAV',b:`<p>Records just the sound${has('#mxSec')?', the whole mix from the console':''}.</p>`},
+  {el:'#rSize',tab:'mix',t:'Offline render',b:`<p>Renders the visuals frame by frame at full quality, on a computer or a phone. Quick preview sizes are fastest.</p>`},
+  {el:'#rSound',t:'Sound for the render',b:`<p><em>Loaded track</em> renders the song exactly. <em>Live take</em> renders a recording of everything you played live, synth and mic included.</p>`},
+  {el:'#takeBtn',t:'Record a live take',b:`<p>Press it, play, press Stop. The take is what the console sends out, so set your faders first.</p>`},
+  {el:'#renderBtn',t:'Render',b:`<p>Starts the render. It doesn't play out loud while it works; the meters show what it's analysing.</p>`}]}
 ];
 W.mix=[
- {name:'Mixing basics',sub:'The console and the video mixer',steps:[
-  {t:'Welcome to Mixing',b:`<p>Mixing runs the <em>Feedback Synth</em> inside it and adds a mixing desk: an audio console for every sound, and a video switcher for the picture.</p><p>Use the real controls while the tour runs, and end it any time.</p>`},
+ {name:'Mixing desk: console',sub:'Levels, pan, EQ and automation',steps:[
+  {t:'The mixing desk',b:`<p>The <em>Mix</em> tab is a mixing desk: an audio console with a strip for every sound, a video switcher for the picture, and Record and Render.</p><p>Use the real controls while the tour runs, and end it any time.</p>`},
   {el:'#goBtn',tab:'loop',t:'1 · Start the sound',b:`<p>Start the loop here (or load a track on the Visuals tab). Channels light up as their sound starts.</p>`},
-  {el:'#mxStrips',tab:'mix',t:'Channel strips',b:`<p>One strip per sound: synth voices, samplers, the track and clip sounds, then the <em>Master</em>. Drag a knob or fader up and down; double-tap resets it.</p>`},
+  {el:'#mxStrips',tab:'mix',t:'Channel strips',b:`<p>One strip per sound: synth voices, samplers, the track, the mic and clip sounds, then the <em>Master</em>. Drag a knob or fader up and down; double-tap resets it.</p>`},
   {el:'.mxS .mxKs',tab:'mix',t:'Pan & width',b:`<p><em>Pan</em> places the sound left or right. <em>Width</em> narrows it to mono or spreads it wider than the original.</p>`},
   {el:'.mxS .mxFW',tab:'mix',t:'Fader & meter',b:`<p>The fader sets the level (the line is 0 dB). The meter shows what comes out; red means it is hitting the top.</p>`},
   {el:'.mxS .mxB',tab:'mix',t:'Mute & solo',b:`<p><em>M</em> mutes a channel. <em>S</em> solos it so you only hear the soloed channels.</p>`},
+  {el:'.mxS[data-ch="mic"]',tab:'mix',t:'Mic strip',b:`<p>The <em>Mic</em> strip carries live input. It goes into recordings, live takes and renders but not to the speakers, so it can't feed back.</p>`},
   {el:'#mxEq',tab:'mix',t:'Parametric EQ',b:`<p>${tap} a strip's name to edit its EQ here. Drag the four dots to boost or cut frequencies; the knobs below set frequency, gain and width (Q).</p>`},
-  {el:'#mxAParam',tab:'mix',t:'Automation',b:`<p>Let the synths move the mix: choose a control and a signal (kick, notes, bass, picture motion…) and an amount. Negative amounts duck, so <em>Fader ← kick, −0.5</em> pumps a channel.</p>`},
+  {el:'#mxAParam',tab:'mix',t:'Automation',b:`<p>Let the synths move the mix: choose a control and a signal (kick, notes, bass, picture motion…) and an amount. Negative amounts duck, so <em>Fader ← kick, −0.5</em> pumps a channel.</p>`}]},
+ {name:'Mixing desk: record & render',sub:'Capture the mix, render a video',steps:[
+  {el:'#lRecVid',tab:'mix',t:'Record video',b:`<p>Records the program picture with the whole mix, live.</p>`},
+  {el:'#lRecWav',tab:'mix',t:'Record WAV',b:`<p>Records the whole mix from the console as a WAV.</p>`},
+  {el:'#rSize',tab:'mix',t:'Offline render',b:`<p>Renders a full-quality video frame by frame, on a computer or a phone. Pick a size; quick preview sizes are fastest.</p>`},
+  {el:'#rSound',tab:'mix',t:'Sound for the render',b:`<p><em>Loaded track</em> renders the song exactly, through its strip and the master. <em>Live take</em> uses a recording of everything you played live.</p>`},
+  {el:'#takeBtn',tab:'mix',t:'Record a live take',b:`<p>Plays the track and records what the console sends out (synth, samplers, clips and mic) until you press Stop. Set your faders first.</p>`},
+  {el:'#takePlay',tab:'mix',t:'Play take',b:`<p>Listen back before you render. Record again any time to replace it.</p>`},
+  {el:'#renderBtn',tab:'mix',t:'Render',b:`<p>Starts the render. It doesn't play out loud while it works; the meters show what it's analysing.${phone?' When it finishes, tap <em>Save / share</em> to keep it.':''}</p>`}]},
+ {name:'Mixing desk: video mixer',sub:'Switch and blend pictures',steps:[
   {el:'#vxSec',tab:'mix',t:'Video mixer',b:`<p>Bus <em>A</em> is on screen (program), bus <em>B</em> is waiting (preview). Sources: the visuals, the synth's picture, a camera, a loaded clip or colour bars.</p>`},
   {el:'#vxT',tab:'mix',t:'T-bar',b:`<p>Slide from A to B with the chosen transition: mix, wipes, iris, push, luma key or blend modes.</p>`},
   {el:'#vxAuto',tab:'mix',t:'Cut & Auto',b:`<p><em>Cut</em> swaps instantly; <em>Auto</em> runs the transition over the length you pick. <em>Auto on the beat</em> does it every few bars by itself.</p>`},
   {el:'#vxTSrc',tab:'mix',t:'T-bar automation',b:`<p>The T-bar can follow a signal too, for example flashing B in on every snare.</p>`}]}
 ];
+const toursNow=()=>{ const k=kindNow(), L=W[k]||[]; return (k!=='mix' && has('#mxSec')) ? L.concat(W.mix) : L; };
 let TOURS=null; const kindNow=()=>window.EM_view ? ({feedback:'combo',audio:'audio',video:'video',mixing:'mix'})[EM_view] : has('#mxSec') ? 'mix' : has('.tabs [data-tab="loop"]') ? 'combo' : has('#vsmSec') ? 'video' : 'audio';
 
 // ---------- player ----------
@@ -484,7 +500,7 @@ function show(dir){ const tour=cur, s=tour.steps[idx];
 function go(d){ if (!cur) return; idx+=d; if (idx<0) idx=0; if (idx>=cur.steps.length) return menu(true); show(d); }
 function start(i){ ensure(); cur=TOURS[i]; idx=0; LS.set('em-tour-seen','1'); nudgeOff(); show(); cancelAnimationFrame(raf); loop(); }
 function end(){ cur=null; target=null; cancelAnimationFrame(raf); if (spot){ spot.style.display='none'; card.style.display='none'; } }
-function menu(done){ ensure(); end(); nudgeOff(); TOURS=W[kindNow()]; LS.set('em-tour-seen','1');
+function menu(done){ ensure(); end(); nudgeOff(); TOURS=toursNow(); LS.set('em-tour-seen','1');
   card.style.setProperty('--tc','#e5463f');
   card.innerHTML=`<div class="th"><span>${done?'Nice! Another tour?':'Guided tours'}</span></div><div class="tx"><p>Pick a walkthrough. You can use the controls as you go, and end it any time with ✕ or Esc.</p></div>
    <div class="tl">${TOURS.map((t,i)=>`<button data-i="${i}">${t.name}<i>${t.sub}</i></button>`).join('')}</div>
@@ -494,7 +510,7 @@ function menu(done){ ensure(); end(); nudgeOff(); TOURS=W[kindNow()]; LS.set('em
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#tourCard button'); if (!b) return;
   if (b.dataset.i!=null) return start(+b.dataset.i); const a=b.dataset.a; if (a==='end') end(); else if (a==='next') go(1); else if (a==='back') go(-1); });
 let nudge=null; function nudgeOff(){ if (nudge){ nudge.remove(); nudge=null; } }
-function init(){ const panel=document.getElementById('panel'); if (!panel || document.getElementById('tourBtn')) return; TOURS=W[kindNow()];
+function init(){ const panel=document.getElementById('panel'); if (!panel || document.getElementById('tourBtn')) return; TOURS=toursNow();
   const b=document.createElement('button'); b.id='tourBtn'; b.innerHTML='<b>?</b> Tour &amp; tutorials'; b.onclick=()=>menu(false);
   const h1=panel.querySelector('h1'); if (h1) h1.after(b); else panel.prepend(b);
   if (!LS.get('em-tour-seen')){ nudge=mk('tourNudge','<span>New here? Take a quick tour.</span><button class="primary">Show me</button><button>✕</button>');
@@ -6137,7 +6153,7 @@ function knob(label, get, set, reset, fmt){
 const COLS={syn:'#9cd2e4',trk:'#e4e86c',vid:'#8ddc86',mst:'#e5463f'};
 let SEL='master';
 function buildStrip(id,name,grp){
-  const c=SAVE.ch[id], el=document.createElement('div'); el.className='mxS'+(id==='master'?' mst':''); el.style.setProperty('--c',COLS[grp]);
+  const c=SAVE.ch[id], el=document.createElement('div'); el.className='mxS'+(id==='master'?' mst':''); el.dataset.ch=id; el.style.setProperty('--c',COLS[grp]);
   el.innerHTML=`<button class="mxN" title="Open EQ and automation">${name}</button><div class="mxKs"></div><div class="mxFW"><div class="mxM"><i></i></div><div class="mxF"><div class="mxCap"></div></div></div><div class="mxDb">0.0</div><div class="mxB"><button class="m">M</button>${id==='master'?'':'<button class="s">S</button>'}</div>`;
   const ks=el.querySelector('.mxKs');
   const kp=knob('Pan',()=>c.pan,v=>{c.pan=v;apply(id);},()=>{c.pan=.5;apply(id);},v=>{ const p=Math.round((v*2-1)*100); return p? (p<0?'L':'R')+Math.abs(p):'C'; });
