@@ -3996,7 +3996,7 @@ async function renderOffline(){
     vEnc=new VideoEncoder({output:(c,m)=>muxer.addVideoChunk(c,m), error:e=>encErr=e}); vEnc.configure(vc.cfg);
     // Safari/iPhone (WebKit) encoders: keep a WAV copy too, in case its AAC still won't play somewhere
     const WK=/AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
-    let aChunks=0, aPeak=0; const wav = (ac.mux==='opus'||WK||window.EM_forceWav) ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
+    let aChunks=0, aPeak=0; const wav = (ac.mux==='opus'||window.EM_forceWav) ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
     // AAC packaging that doesn't trust the encoder's metadata: WebKit can leave out the AudioSpecificConfig
     // (the MP4 then has an unplayable, silent sound track) or hand out ADTS-framed packets.
     const SRI=[96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350];
@@ -4067,7 +4067,7 @@ async function renderOffline(){
     const sndNote = aPeak<1e-4 ? ' Note: the track is silent in this range (check the track volume, mute or solo).'
       : PR.ok===false ? ' Warning: this browser\'s sound encoder wrote silence in every way tried, so the MP4 will be silent. Use the WAV saved next to it (or Record).'
       : ac.mux==='opus' ? ' Sound is Opus because this browser cannot make AAC: QuickTime, iPhone Photos and some editors play it silent, so the sound is also saved as a WAV next to it (Chrome and VLC play the MP4 fine).'
-      : WK ? ' Sound: AAC. A WAV copy of the sound is saved too, in case the video plays silent.' : ' Sound: AAC.'+(PR.fmt!=='f32-planar'||PR.cfg!==ac.cfg?` (sound check: ${PR.fmt}${PR.cfg!==ac.cfg?', 128k':''})`:PR.ok?' (sound check passed)':'');
+      : ' Sound: AAC.'+(PR.fmt!=='f32-planar'||PR.cfg!==ac.cfg?` (sound check: ${PR.fmt}${PR.cfg!==ac.cfg?', 128k':''})`:PR.ok?' (sound check passed)':'');
     if (wav){ const hd=new DataView(new ArrayBuffer(44)), w=(o,t)=>{ for (let i=0;i<t.length;i++) hd.setUint8(o+i,t.charCodeAt(i)); };
       w(0,'RIFF'); hd.setUint32(4,36+wav.byteLength,true); w(8,'WAVEfmt '); hd.setUint32(16,16,true); hd.setUint16(20,1,true); hd.setUint16(22,ch,true);
       hd.setUint32(24,sr,true); hd.setUint32(28,sr*ch*2,true); hd.setUint16(32,ch*2,true); hd.setUint16(34,16,true); w(36,'data'); hd.setUint32(40,wav.byteLength,true);
