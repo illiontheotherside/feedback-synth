@@ -3886,8 +3886,30 @@ async function renderOffline(){
       video:{codec:vc.mux,width:W,height:H,frameRate:fps}, audio:{codec:ac.mux,numberOfChannels:ch,sampleRate:sr}});
     let encErr=null;
     vEnc=new VideoEncoder({output:(c,m)=>muxer.addVideoChunk(c,m), error:e=>encErr=e}); vEnc.configure(vc.cfg);
-    let aChunks=0, aPeak=0; const wav = ac.mux==='opus' ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
-    aEnc=new AudioEncoder({output:(c,m)=>{ aChunks++; muxer.addAudioChunk(c,m); }, error:e=>encErr=e}); aEnc.configure(ac.cfg);
+    // Safari/iPhone (WebKit) encoders: keep a WAV copy too, in case its AAC still won't play somewhere
+    const WK=/AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
+    let aChunks=0, aPeak=0; const wav = (ac.mux==='opus'||WK) ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
+    // AAC packaging that doesn't trust the encoder's metadata: WebKit can leave out the AudioSpecificConfig
+    // (the MP4 then has an unplayable, silent sound track) or hand out ADTS-framed packets.
+    const SRI=[96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350];
+    const asc=(aot,sri,chn)=>new Uint8Array([(aot<<3)|(sri>>1), ((sri&1)<<7)|(chn<<3)]);
+    let aCfgSent=false, aNext=0; const aFrameUs=1024*1e6/sr;
+    const aOut=(c,m)=>{ aChunks++;
+      if (ac.mux!=='aac'){ muxer.addAudioChunk(c,m); return; }
+      let d=new Uint8Array(c.byteLength); c.copyTo(d);
+      let cfgAsc=null;
+      if (d.length>7 && d[0]===0xFF && (d[1]&0xF0)===0xF0){ // ADTS header: strip it, read the config from it
+        const aot=((d[2]>>6)&3)+1, sri=(d[2]>>2)&15, chn=((d[2]&1)<<2)|(d[3]>>6), hl=(d[1]&1)?7:9;
+        cfgAsc=asc(aot,sri,chn||ch); d=d.subarray(hl); }
+      let meta;
+      if (!aCfgSent){ const dc=(m&&m.decoderConfig)||{}; let desc=dc.description;
+        const dl=desc ? (desc.byteLength||0) : 0;
+        if (cfgAsc) desc=cfgAsc; else if (dl<2) desc=asc(2,Math.max(0,SRI.indexOf(sr)),ch);
+        meta={decoderConfig:{codec:'mp4a.40.2', sampleRate:sr, numberOfChannels:ch, description:desc}}; aCfgSent=true; }
+      let ts=c.timestamp; if (!(ts>=0) || ts<aNext-aFrameUs*.5) ts=aNext;
+      const du=(c.duration>0)?c.duration:aFrameUs; aNext=ts+du;
+      muxer.addAudioChunkRaw(d, c.type||'key', ts, du, meta); };
+    aEnc=new AudioEncoder({output:aOut, error:e=>encErr=e}); aEnc.configure(ac.cfg);
     // reset state for a reproducible render
     canvas.width=W; canvas.height=H; allocFB(); fitCanvas();
     rnd=seededRandom(+$('rSeed').value||1); resetAnalysis(); seed=0; resetRing(); lastDrawNow=0; lastCutAt=-1e9; stut.until=-1;
@@ -3932,7 +3954,8 @@ async function renderOffline(){
     if (!aChunks) throw new Error('the sound encoder produced nothing, so the file would be silent. Try Record instead, or another browser.');
     muxer.finalize();
     const sndNote = aPeak<1e-4 ? ' Note: the track is silent in this range (check the track volume, mute or solo).'
-      : ac.mux==='opus' ? ' Sound is Opus because this browser cannot make AAC: QuickTime, iPhone Photos and some editors play it silent, so the sound is also saved as a WAV next to it (Chrome and VLC play the MP4 fine).' : ' Sound: AAC.';
+      : ac.mux==='opus' ? ' Sound is Opus because this browser cannot make AAC: QuickTime, iPhone Photos and some editors play it silent, so the sound is also saved as a WAV next to it (Chrome and VLC play the MP4 fine).'
+      : WK ? ' Sound: AAC. A WAV copy of the sound is saved too, in case the video plays silent.' : ' Sound: AAC.';
     if (wav){ const hd=new DataView(new ArrayBuffer(44)), w=(o,t)=>{ for (let i=0;i<t.length;i++) hd.setUint8(o+i,t.charCodeAt(i)); };
       w(0,'RIFF'); hd.setUint32(4,36+wav.byteLength,true); w(8,'WAVEfmt '); hd.setUint32(16,16,true); hd.setUint16(20,1,true); hd.setUint16(22,ch,true);
       hd.setUint32(24,sr,true); hd.setUint32(28,sr*ch*2,true); hd.setUint16(32,ch*2,true); hd.setUint16(34,16,true); w(36,'data'); hd.setUint32(40,wav.byteLength,true);
