@@ -3903,6 +3903,47 @@ async function pickAudioCodec(ch){
   return null;
 }
 (function(){ const w=document.getElementById('rWhere'); if (w) w.textContent=window.showSaveFilePicker?'When you press Render you choose where to save first; the video is written there as it renders.':'This browser saves the finished video to your Downloads folder (Chrome or Edge can ask where to save).'; })();
+function mkAD(src,pos,n,ch,sr,ts,fmt){ let data;
+  if (fmt==='f32-planar'){ data=new Float32Array(n*ch); for (let c=0;c<ch;c++) data.set(src.getChannelData(c).subarray(pos,pos+n), c*n); }
+  else { data=fmt==='s16'?new Int16Array(n*ch):new Float32Array(n*ch);
+    for (let c=0;c<ch;c++){ const d=src.getChannelData(c); for (let i=0;i<n;i++){ const v=d[pos+i]||0; data[i*ch+c]=fmt==='s16'?Math.round(Math.max(-1,Math.min(1,v))*32767):v; } } }
+  return new AudioData({format:fmt,sampleRate:sr,numberOfFrames:n,numberOfChannels:ch,timestamp:ts,data});
+}
+// returns {fmt,cfg,ok}: ok true = heard it back, false = encoder writes silence in every way tried, null = could not check
+async function probeAudio(ac,src,s0,s1,ch,sr){
+  const def={fmt:'f32-planar',cfg:ac.cfg,ok:null};
+  if (!window.AudioDecoder) return def;
+  const len=Math.min(s1-s0, sr); if (len<4096) return def;
+  const d0=src.getChannelData(0); let best=s0, bv=-1;
+  for (let p=s0; p<=Math.min(s1-len, s0+sr*30); p+=Math.round(sr/4)){ let e=0; for (let i=p;i<p+len;i+=64) e+=Math.abs(d0[i]); if (e>bv){ bv=e; best=p; } }
+  if (bv/(len/64)<1e-4) return def; // nothing to hear in the range
+  const SRI=[96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350];
+  let heardAny=false;
+  for (const cfg of [ac.cfg, Object.assign({},ac.cfg,{bitrate:128000})]) for (const fmt of ['f32-planar','f32','s16']){
+    try{
+      const chunks=[]; let desc=null, encErr=null;
+      const enc=new AudioEncoder({output:(c,m)=>{ const d=new Uint8Array(c.byteLength); c.copyTo(d); chunks.push({d,t:c.timestamp}); const dd=m&&m.decoderConfig&&m.decoderConfig.description; if (dd&&!desc&&(dd.byteLength||0)>=2) desc=dd; }, error:e=>encErr=e});
+      enc.configure(cfg);
+      for (let p=0;p<len;p+=4800){ const n=Math.min(4800,len-p); const a=mkAD(src,best+p,n,ch,sr,Math.round(p*1e6/sr),fmt); enc.encode(a); a.close(); }
+      await enc.flush(); enc.close(); if (encErr || !chunks.length) continue;
+      let peak=0, frames=0;
+      const dec=new AudioDecoder({output:a=>{ frames++; const n=a.numberOfFrames, b=new Float32Array(n*a.numberOfChannels);
+          try{ a.copyTo(b.subarray(0,n),{planeIndex:0,format:'f32-planar'}); }catch(e){ try{ a.copyTo(b,{planeIndex:0,format:'f32'}); }catch(e2){} }
+          for (let i=0;i<b.length;i++){ const x=Math.abs(b[i]); if (x>peak) peak=x; } a.close(); }, error:()=>{}});
+      const dc={codec:cfg.codec, sampleRate:sr, numberOfChannels:ch};
+      if (ac.mux==='aac'){ let h=chunks[0].d; if (h[0]===0xFF&&(h[1]&0xF0)===0xF0){ const aot=((h[2]>>6)&3)+1, sri=(h[2]>>2)&15, cn=((h[2]&1)<<2)|(h[3]>>6); desc=new Uint8Array([(aot<<3)|(sri>>1),((sri&1)<<7)|((cn||ch)<<3)]);
+          for (const c of chunks) if (c.d[0]===0xFF&&(c.d[1]&0xF0)===0xF0) c.d=c.d.subarray((c.d[1]&1)?7:9); }
+        dc.description=desc||new Uint8Array([(2<<3)|(Math.max(0,SRI.indexOf(sr))>>1),((Math.max(0,SRI.indexOf(sr))&1)<<7)|(ch<<3)]); }
+      else if (desc) dc.description=desc;
+      dec.configure(dc);
+      for (const c of chunks) dec.decode(new EncodedAudioChunk({type:'key',timestamp:c.t,data:c.d}));
+      await dec.flush(); dec.close();
+      if (frames) heardAny=true;
+      if (peak>2e-3) return {fmt,cfg,ok:true};
+    }catch(e){}
+  }
+  return heardAny ? {fmt:'f32-planar',cfg:ac.cfg,ok:false} : def;
+}
 async function renderOffline(){
   const info=$('rInfo'), bar=$('rBar');
   if (!window.VideoEncoder || !window.AudioEncoder){ info.textContent='Offline rendering needs Chrome or Edge (version 94+), or Safari 17+.'; return; }
@@ -3948,7 +3989,7 @@ async function renderOffline(){
     vEnc=new VideoEncoder({output:(c,m)=>muxer.addVideoChunk(c,m), error:e=>encErr=e}); vEnc.configure(vc.cfg);
     // Safari/iPhone (WebKit) encoders: keep a WAV copy too, in case its AAC still won't play somewhere
     const WK=/AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
-    let aChunks=0, aPeak=0; const wav = (ac.mux==='opus'||WK) ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
+    let aChunks=0, aPeak=0; const wav = (ac.mux==='opus'||WK||window.EM_forceWav) ? new Int16Array((s1-s0)*ch) : null; // Opus-in-MP4 is silent in QuickTime/Photos: keep a WAV copy
     // AAC packaging that doesn't trust the encoder's metadata: WebKit can leave out the AudioSpecificConfig
     // (the MP4 then has an unplayable, silent sound track) or hand out ADTS-framed packets.
     const SRI=[96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350];
@@ -3969,7 +4010,9 @@ async function renderOffline(){
       let ts=c.timestamp; if (!(ts>=0) || ts<aNext-aFrameUs*.5) ts=aNext;
       const du=(c.duration>0)?c.duration:aFrameUs; aNext=ts+du;
       muxer.addAudioChunkRaw(d, c.type||'key', ts, du, meta); };
-    aEnc=new AudioEncoder({output:aOut, error:e=>encErr=e}); aEnc.configure(ac.cfg);
+    const SRCB=(typeof abuf!=='undefined')?abuf:buf;
+    info.textContent='Checking the sound encoder…'; const PR=await probeAudio(ac,SRCB,s0,s1,ch,sr);
+    aEnc=new AudioEncoder({output:aOut, error:e=>encErr=e}); aEnc.configure(PR.cfg);
     // reset state for a reproducible render
     canvas.width=W; canvas.height=H; allocFB(); fitCanvas();
     rnd=seededRandom(+$('rSeed').value||1); resetAnalysis(); seed=0; resetRing(); lastDrawNow=0; lastCutAt=-1e9; stut.until=-1;
@@ -3996,7 +4039,8 @@ async function renderOffline(){
       const aTo=Math.min(s1, s0+Math.round((f-f0+1)*sr/fps));
       while (aPos<aTo){ const n=Math.min(4800,aTo-aPos), data=new Float32Array(n*ch);
         for (let c=0;c<ch;c++) data.set(abuf.getChannelData(c).subarray(aPos,aPos+n), c*n);
-        const ad=new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:n,numberOfChannels:ch,timestamp:Math.round((aPos-s0)*1e6/sr),data});
+        const ad = PR.fmt==='f32-planar' ? new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:n,numberOfChannels:ch,timestamp:Math.round((aPos-s0)*1e6/sr),data})
+          : mkAD(SRCB,aPos,n,ch,sr,Math.round((aPos-s0)*1e6/sr),PR.fmt);
         for (let i=0;i<data.length;i++){ const a=Math.abs(data[i]); if (a>aPeak) aPeak=a; }
         if (wav) for (let c=0;c<ch;c++) for (let i=0;i<n;i++){ const v=Math.max(-1,Math.min(1,data[c*n+i])); wav[(aPos-s0+i)*ch+c]=v<0?v*32768:v*32767; }
         aEnc.encode(ad); ad.close(); aPos+=n; }
@@ -4014,8 +4058,9 @@ async function renderOffline(){
     if (!aChunks) throw new Error('the sound encoder produced nothing, so the file would be silent. Try Record instead, or another browser.');
     muxer.finalize();
     const sndNote = aPeak<1e-4 ? ' Note: the track is silent in this range (check the track volume, mute or solo).'
+      : PR.ok===false ? ' Warning: this browser\'s sound encoder wrote silence in every way tried, so the MP4 will be silent. Use the WAV saved next to it (or Record).'
       : ac.mux==='opus' ? ' Sound is Opus because this browser cannot make AAC: QuickTime, iPhone Photos and some editors play it silent, so the sound is also saved as a WAV next to it (Chrome and VLC play the MP4 fine).'
-      : WK ? ' Sound: AAC. A WAV copy of the sound is saved too, in case the video plays silent.' : ' Sound: AAC.';
+      : WK ? ' Sound: AAC. A WAV copy of the sound is saved too, in case the video plays silent.' : ' Sound: AAC.'+(PR.fmt!=='f32-planar'||PR.cfg!==ac.cfg?` (sound check: ${PR.fmt}${PR.cfg!==ac.cfg?', 128k':''})`:PR.ok?' (sound check passed)':'');
     if (wav){ const hd=new DataView(new ArrayBuffer(44)), w=(o,t)=>{ for (let i=0;i<t.length;i++) hd.setUint8(o+i,t.charCodeAt(i)); };
       w(0,'RIFF'); hd.setUint32(4,36+wav.byteLength,true); w(8,'WAVEfmt '); hd.setUint32(16,16,true); hd.setUint16(20,1,true); hd.setUint16(22,ch,true);
       hd.setUint32(24,sr,true); hd.setUint32(28,sr*ch*2,true); hd.setUint16(32,ch*2,true); hd.setUint16(34,16,true); w(36,'data'); hd.setUint32(40,wav.byteLength,true);
