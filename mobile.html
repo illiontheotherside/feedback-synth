@@ -409,7 +409,7 @@ W.video=[
   {t:'Welcome',b:`<p>This is a <em>video synth</em>: it listens to music and cuts, moves and colours pictures in time with it.</p><p>The tour points at one control at a time. You can use the real controls while it runs, and end it whenever you like.</p>`},
   {el:'#audioFile',t:'1 · Load a song',b:`<p>${tap} <em>Load track</em> and pick a song or any sound file. Its beats and loudness drive everything.</p><p>No song? Use the mic or live input further down in this section.</p>`},
   {el:'#mediaFile',t:'2 · Add pictures',b:`<p>Add your own <em>images or videos</em>. They go into the source pool that the synth cuts between.</p>`},
-  {el:['#genSel','#genAdd'],t:'Generative art',b:`<p>No pictures handy? Add <em>generative sources</em>: Turing patterns, acrylic pour, contour lines, op-art circles, flow stipple, spiral blocks, glass orbs, sticker blobs, voxel relief, liquid light and more. They are drawn live and react to the music.</p>`},
+  {el:['#genSel','#genAdd'],t:'Generative art',b:`<p>No pictures handy? Add <em>generative sources</em>: Turing patterns, acrylic pour, contour lines, op-art circles, a particle point cloud, flow stipple, spiral blocks, glass orbs, sticker blobs, voxel relief, liquid light and more. They are drawn live and react to the music.</p>`},
   {el:'#nlRow',t:'Look styles',b:`<p>Each new look has its own <em>style</em>: colours and variations, like neon loops or ink topo lines. <em>Auto</em> moves to the next style every 8 bars.</p>`},
   {el:'#pool',t:'The source pool',b:`<p>Everything the synth can show. ${tap} a thumbnail to switch it on or off; the ✕ removes it.</p>`},
   {el:['#playBtn','#mbar'],t:'3 · Play',b:`<p>Press <em>Play</em>. The picture now cuts on the beat. Space bar also plays and pauses.</p>`},
@@ -479,7 +479,7 @@ W.combo=[
  {name:'Visuals tab',sub:'The video synth',steps:[
   {el:'#audioFile',tab:'visuals',t:'A track (optional)',b:`<p>Load a song if you want the visuals to follow it as well as the synth.</p>`},
   {el:'#mediaFile',tab:'visuals',t:'Pictures',b:`<p>Add images or videos for the visuals to cut between.</p>`},
-  {el:['#genSel','#genAdd'],tab:'visuals',t:'Generative art',b:`<p>Or add generative sources: Turing patterns, acrylic pour, contour lines, op-art circles, glass orbs, liquid light…</p>`},
+  {el:['#genSel','#genAdd'],tab:'visuals',t:'Generative art',b:`<p>Or add generative sources: Turing patterns, acrylic pour, contour lines, op-art circles, point cloud, glass orbs, liquid light…</p>`},
   {el:'#nlRow',tab:'visuals',t:'Look styles',b:`<p>Pick a style for each new look, or leave it on <em>Auto</em> to change every 8 bars.</p>`},
   {el:'#vsmSec',tab:'visuals',t:'Sampler (video + sound)',b:`<p>Load or record a clip; it is cut at its hits and plays picture, sound or both.</p>`},
   {el:'#maps',tab:'visuals',t:'Mapping',b:`<p>Choose which sound feature moves which picture setting.</p>`}]},
@@ -853,7 +853,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
         <button id="clearPool">Clear</button>
       </div>
       <div class="row"><select id="genSel" style="flex:1;min-width:0"></select></div>
-      <div class="row" id="nlRow"><span class="small">Look styles</span><label class="small">Turing <select data-nl="rd"></select></label><label class="small">Pour <select data-nl="pour"></select></label><label class="small">Contours <select data-nl="con"></select></label><label class="small">Stipple <select data-nl="stip"></select></label><label class="small">Spiral <select data-nl="spiral"></select></label><label class="small">Orbs <select data-nl="orbs"></select></label><label class="small">Stickers <select data-nl="stick"></select></label><label class="small">Relief <select data-nl="vox"></select></label><label class="small">Op-art <select data-nl="opart"></select></label></div>
+      <div class="row" id="nlRow"><span class="small">Look styles</span><label class="small">Turing <select data-nl="rd"></select></label><label class="small">Pour <select data-nl="pour"></select></label><label class="small">Contours <select data-nl="con"></select></label><label class="small">Stipple <select data-nl="stip"></select></label><label class="small">Spiral <select data-nl="spiral"></select></label><label class="small">Orbs <select data-nl="orbs"></select></label><label class="small">Stickers <select data-nl="stick"></select></label><label class="small">Relief <select data-nl="vox"></select></label><label class="small">Op-art <select data-nl="opart"></select></label><label class="small">Cloud <select data-nl="cloud"></select></label></div>
       <div class="row" id="oilRow"><span class="small">Liquid light</span><label class="small">Set <select id="oilPal"></select></label><label class="small">Oil 1 <input type="color" id="oilC1"></label><label class="small">Oil 2 <input type="color" id="oilC2"></label><label class="small">Oil 3 <input type="color" id="oilC3"></label><label class="small">Light <input type="color" id="oilBg"></label><label class="small"><input type="checkbox" id="oilDisc"> Projector circle</label></div>
       <div class="row" id="orbRow"><span class="small">Moiré orbs</span><label class="small">Shape <select id="orbShape"><option value="auto">Auto (changes every 4 bars)</option><option value="sphere">Sphere</option><option value="ribbed">Ribbed orb</option><option value="wavy">Wavy blob</option><option value="bubbles">Bubbles</option><option value="horizon">Horizon glow</option><option value="tunnel">Spiral tunnel</option></select></label><label class="small">Palette <select id="orbPal"></select></label></div>
       <div class="row" id="inkRow"><span class="small">Ink bloom colours</span><label class="small">Ink <input type="color" id="inkC1"></label><label class="small">Ink 2 <input type="color" id="inkC2"></label><label class="small">Paper <input type="color" id="inkBg"></label><button id="inkReset" title="Back to black ink on white">Reset</button></div>
@@ -4368,6 +4368,7 @@ const GENS = {
   'Sticker blobs': { credit:'jagged comic rings', make(){ return stickerGen(); }},
   'Voxel relief': { credit:'extruded block terrain', make(){ return voxelGen(); }},
   'Op-art circles': { credit:'circle grid, striped racetrack, neon lenses', make(){ return opartGen(); }},
+  'Point cloud': { credit:'particle specks on a folding 3D form', make(){ return cloudGen(); }},
 };
 /* ---- op-art ribbons: shared helpers ---- */
 function palMix(P,v){ v=((v%1)+1)%1*P.length; const i=Math.floor(v), f=v-i, a=P[i], b=P[(i+1)%P.length], e=f*f*(3-2*f);
@@ -5069,6 +5070,63 @@ function opartGen(){
     // a thin line that jumps on hits, and a few square markers
     const ly=gl.y*h; g.strokeStyle=sty.line; g.lineWidth=Math.max(1.5,M/300); g.beginPath(); g.moveTo(0,ly); for (let x=0;x<=w;x+=w/12) g.lineTo(x,ly+Math.sin(x*.02+t*3)*M*.004*(1+A.high*4)); g.stroke();
     g.fillStyle=sty.deep; for (let i=0;i<C.length;i+=23){ const q=C[i], s=M*.008; g.fillRect(q.x+q.r*.6-s/2,q.y-q.r*.7-s/2,s,s); }
+  }}; }
+/* ---- v30 Point cloud (illi, 2026-11-22, after a TouchDesigner particle reel): tens of thousands of fine specks
+   sampled on a 3D surface that morphs between a folded sheet, a blob, a torus and a twisted ribbon. Each speck
+   lives a little behind or ahead in time, so the form smears and folds; old frames fade slowly into streaks.
+   Bass inflates and folds it, beats blow it apart into dust that settles back, highs make it shimmer ---- */
+NL_STYLES.cloud={
+  'White dust':{bg:[0,0,0], ink:[255,255,255], inv:false},
+  'Ice':       {bg:[2,6,14], ink:[150,225,255], inv:false},
+  'Ember':     {bg:[8,2,0], ink:[255,150,60], inv:false},
+  'Negative':  {bg:[244,242,236], ink:[18,18,18], inv:true},
+};
+function cloudGen(){
+  const st={i:0}; let N=0, U=null, V=null, LAG=null, SH=null, acc=null, img=null, cv=null, cx=null, W=0, H=0, lut=null, lutKey='';
+  let t=0, yaw=0, pitch=.35, shape=0, shapeT=1, from=0, beats=0, burst=0, fold=0;
+  const NS=4;
+  function base(k,u,v,o){ // the four surfaces, all roughly unit size
+    if (k===0){ const x=u/Math.PI-1, y=v/Math.PI*2-1; o[0]=x*1.25; o[1]=y*.85; o[2]=.25*Math.sin(x*2.6)*Math.cos(y*2.2); }
+    else if (k===1){ const th=v*.5, s=Math.sin(th); o[0]=Math.cos(u)*s; o[1]=Math.cos(th); o[2]=Math.sin(u)*s; }
+    else if (k===2){ const R=.75, r=.32; o[0]=(R+r*Math.cos(v))*Math.cos(u); o[1]=r*Math.sin(v)*1.4; o[2]=(R+r*Math.cos(v))*Math.sin(u); }
+    else { const x=(u/Math.PI-1)*1.3, wv=(v/Math.PI-1)*.32, a=x*2.4; o[0]=x; o[1]=Math.cos(a)*wv; o[2]=Math.sin(a)*wv; }
+  }
+  return { draw(g,w,h,c){
+    const A=c.A, sty=nlStyle('cloud',st,c), sc=NL_COARSE?.6:(w>1400?.75:1);
+    if (!U){ N=NL_COARSE?22000:48000; U=new Float32Array(N); V=new Float32Array(N); LAG=new Float32Array(N); SH=new Float32Array(N*3*NS);
+      const o=[0,0,0];
+      for (let i=0;i<N;i++){ U[i]=c.rnd()*6.2832; V[i]=c.rnd()*6.2832; LAG[i]=Math.pow(c.rnd(),1.6);
+        for (let k=0;k<NS;k++){ base(k,U[i],V[i],o); SH[(i*NS+k)*3]=o[0]; SH[(i*NS+k)*3+1]=o[1]; SH[(i*NS+k)*3+2]=o[2]; } } }
+    const rw=Math.max(64,Math.round(w*sc)), rh=Math.max(64,Math.round(h*sc));
+    if (!acc||W!==rw||H!==rh){ W=rw; H=rh; acc=new Float32Array(W*H); cv=document.createElement('canvas'); cv.width=W; cv.height=H; cx=cv.getContext('2d'); img=cx.createImageData(W,H); }
+    const key=sty.bg.join()+sty.ink.join(); if (key!==lutKey){ lutKey=key; lut=new Uint32Array(256);
+      for (let i=0;i<256;i++){ const f=Math.pow(i/255,.8), r=sty.bg[0]+(sty.ink[0]-sty.bg[0])*f, gg=sty.bg[1]+(sty.ink[1]-sty.bg[1])*f, b=sty.bg[2]+(sty.ink[2]-sty.bg[2])*f; lut[i]=(255<<24)|(b<<16)|(gg<<8)|r; } }
+    // motion: shape changes every 4 bars, beats scatter it, mids turn it
+    t+=c.dt*(.35+A.level*.8)*(.5+c.speed); yaw+=c.dt*(.12+A.mid*.6)*(.5+c.speed); pitch=.35+.25*Math.sin(t*.21);
+    if (c.beat){ beats++; burst=Math.max(burst,.12+A.bass*.38); if (beats%16===0){ from=shape; shape=(shape+1)%NS; shapeT=0; } }
+    burst*=Math.pow(.05,c.dt); shapeT=Math.min(1,shapeT+c.dt*.5); fold+=((.25+A.bass*1.1)-fold)*Math.min(1,c.dt*4);
+    const e=shapeT*shapeT*(3-2*shapeT);
+    // fade the old specks: low decay = long streaks; loud passages keep more trail
+    const keep=Math.min(.93,.72+A.level*.15+c.speed*.08); for (let i=0;i<acc.length;i++) acc[i]*=keep;
+    const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch), S=Math.min(W,H)*.42, ox=W/2, oy=H/2;
+    const add=(NL_COARSE?70:46)*(1+A.high*.6)*(sc<1?1.3:1), lagSpan=.6+A.level*.9, jit=A.high*.012;
+    for (let i=0;i<N;i++){ const a=(i*NS+from)*3, b=(i*NS+shape)*3;
+      let x=SH[a]+(SH[b]-SH[a])*e, y=SH[a+1]+(SH[b+1]-SH[a+1])*e, z=SH[a+2]+(SH[b+2]-SH[a+2])*e;
+      // each speck sees the folding field at its own moment in time: the smear
+      const tt=t-LAG[i]*lagSpan, ph=U[i]*.5+V[i]*.3;
+      x+=fold*.22*Math.sin(y*3.1+tt*1.3); y+=fold*.18*Math.sin(z*2.7-tt*1.1+ph*.2); z+=fold*.25*Math.sin(x*2.3+tt*.9);
+      if (burst>.01){ const k=burst*(.4+LAG[i]); x*=1+k*.8; y*=1+k*.8; z*=1+k*.8; x+=Math.sin(i*12.9898)*k*.25; y+=Math.sin(i*78.233)*k*.25; }
+      if (jit){ x+=Math.sin(i*3.7+t*40)*jit; y+=Math.cos(i*5.3+t*37)*jit; }
+      // turn and project
+      const x1=x*cy+z*sy, z1=-x*sy+z*cy, y1=y*cp-z1*sp, z2=y*sp+z1*cp, pz=1/(3.0-z2);
+      const px=(ox+x1*S*1.9*pz)|0, py=(oy-y1*S*1.9*pz)|0;
+      if (px<0||py<0||px>=W||py>=H) continue;
+      acc[py*W+px]+=add*(.6+.8*pz);
+    }
+    const d32=new Uint32Array(img.data.buffer);
+    for (let i=0;i<acc.length;i++){ const v=acc[i]; d32[i]=lut[v>=255?255:v|0]; }
+    cx.putImageData(img,0,0);
+    g.imageSmoothingEnabled=sc<1; g.drawImage(cv,0,0,w,h);
   }}; }
 (function(){
   const row=$('nlRow'); if (!row) return;
