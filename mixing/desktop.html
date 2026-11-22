@@ -396,7 +396,8 @@ W.audio=[
   {el:'#meters',t:'What it sees',b:`<p>These meters show what the synth reads from the picture: brightness, colour, detail, motion and more.</p>`},
   {el:['#keySel','#scaleSel'],t:'Key & scale',b:`<p>Every note stays in this key and scale, so it always sounds musical.</p>`},
   {el:'[data-mod="arp"]',t:'Voices',b:`<p>Each voice can be switched on and shaped: image score, pad, spectral scanner, drums and noise.</p>`},
-  {el:'#sceneBtns',t:'Scenes',b:`<p>Jump between complete sounds here, and save your own.</p>`}]},
+  {el:'[data-mod="arp"] [data-k="arp.wave"]',t:'illi voices',b:`<p>The <em>Sound</em> menus also hold voices modelled on illi's own tracks: <em>Beep bloop</em>, <em>Buzz loop</em> and <em>Glide lead</em> here, <em>Octave organ</em>, <em>Hollow sun</em> and <em>Dark tape</em> pads, and the <em>Sub boom</em> and <em>Beatfreaq dust</em> drum kits.</p>`},
+  {el:'#sceneBtns',t:'Scenes',b:`<p>Jump between complete sounds here, and save your own. The three <em>illi</em> scenes start from illi's songs: Tight Dream, sun day and Communication is difficult.</p>`}]},
  {name:'Sampler',sub:'Chop a sound at its hits',steps:[
   {el:'[data-mod="smp"]',t:'Sampler',b:`<p>Load a sound and it gets <em>cut at its hits</em>; the picture then plays the slices.</p>`},
   {el:'#smpFile',t:'Load audio',b:`<p>Any loop, beat or recording works. Videos work too: their sound is used.</p>`},
@@ -421,6 +422,7 @@ W.combo=[
   {el:'#as-mediaFile',tab:'sound',t:'Picture input',b:`<p>Give the synth its own picture, video or webcam. It plays the bright spots, colours and motion.</p>`},
   {el:'#as-meters',tab:'sound',t:'What it reads',b:`<p>Brightness, colour, detail and motion, as the synth sees them.</p>`},
   {el:'[data-mod="arp"]',tab:'sound',t:'Voices',b:`<p>Image score, pad, spectral scanner, drums and noise. Switch each on and shape it.</p>`},
+  {el:'[data-mod="arp"] [data-k="arp.wave"]',tab:'sound',t:'illi voices',b:`<p>The <em>Sound</em> menus also hold voices modelled on illi's own tracks: gliding and buzzing leads, warm organ and hollow pads, and the <em>Sub boom</em> and <em>Beatfreaq dust</em> drum kits.</p>`},
   {el:'[data-mod="smp"]',tab:'sound',t:'Sampler',b:`<p>Load or record a sound and it gets cut at its hits; the picture plays the slices.</p>`}]},
  {name:'Visuals tab',sub:'The video synth',steps:[
   {el:'#audioFile',tab:'visuals',t:'A track (optional)',b:`<p>Load a song if you want the visuals to follow it as well as the synth.</p>`},
@@ -647,14 +649,14 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
         <label class="small" style="flex:1">Swing<input data-k="swing" type="range" min="0" max="0.6" step="0.01"></label></div>
       <div class="row"><label class="small">Steps <select data-k="steps"><option>8</option><option>12</option><option>16</option><option>24</option><option>32</option></select></label>
         <label class="small">Scan <select data-k="scan"><option value="lr">Left → right</option><option value="rl">Right → left</option><option value="pp">Ping-pong</option><option value="tb">Top → bottom</option></select></label></div>
-      <div class="row"><label class="small">Chords from <select data-k="chordFrom"><option value="hue">Colour (hue)</option><option value="cy">Where the light is</option><option value="bright">Brightness</option><option value="cycle">Cycle i–VI–iv–v</option></select></label></div>
+      <div class="row"><label class="small">Chords from <select data-k="chordFrom"><option value="hue">Colour (hue)</option><option value="cy">Where the light is</option><option value="bright">Brightness</option><option value="cycle">Cycle i–VI–iv–v</option><option value="emcycle">Cycle i–VII–III–VI (illi)</option></select></label></div>
     </div>
 
     <h2>3 · Voices</h2>
     <div class="sec mod" data-mod="arp">
       <div class="modhead"><label><input data-k="arp.on" type="checkbox"> Image score</label><span class="sub">bright spots on the scan line → notes</span></div>
       <div class="fxgrid">
-        <label>Sound<select data-k="arp.wave"><option value="triangle">Soft (triangle)</option><option value="square">Hollow (square)</option><option value="sawtooth">Bright (saw)</option><option value="sine">Pure (sine)</option><option value="fm">Bell (FM)</option><option value="pluck">Pluck</option></select></label>
+        <label>Sound<select data-k="arp.wave"><option value="triangle">Soft (triangle)</option><option value="square">Hollow (square)</option><option value="sawtooth">Bright (saw)</option><option value="sine">Pure (sine)</option><option value="fm">Bell (FM)</option><option value="pluck">Pluck</option><optgroup label="illi voices"><option value="em-beep">Beep bloop</option><option value="em-buzz">Buzz loop</option><option value="em-glide">Glide lead</option></optgroup></select></label>
         <label>Notes at once<input data-k="arp.poly" type="range" min="1" max="6" step="1"></label>
         <label>Pitch rows<input data-k="arp.rows" type="range" min="6" max="24" step="1"></label>
         <label>Register<select data-k="arp.oct"><option value="-1">Low</option><option value="0">Mid</option><option value="1">High</option></select></label>
@@ -664,7 +666,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
     <div class="sec mod" data-mod="pad">
       <div class="modhead"><label><input data-k="pad.on" type="checkbox"> Pad</label><span class="sub">chords that follow the picture</span></div>
       <div class="fxgrid">
-        <label>Sound<select data-k="pad.wave"><option value="sawtooth">Warm (saw)</option><option value="square">Reed (square)</option><option value="triangle">Soft (triangle)</option><option value="sine">Pure (sine)</option></select></label>
+        <label>Sound<select data-k="pad.wave"><option value="sawtooth">Warm (saw)</option><option value="square">Reed (square)</option><option value="triangle">Soft (triangle)</option><option value="sine">Pure (sine)</option><optgroup label="illi voices"><option value="em-octave">Octave organ</option><option value="em-hollow">Hollow sun</option><option value="em-dark">Dark tape</option></optgroup></select></label>
         <label>Glide<input data-k="pad.glide" type="range" min="0" max="1" step="0.01"></label>
         <label class="chk"><input data-k="pad.sev" type="checkbox"> 7th chords</label>
       </div>
@@ -684,7 +686,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
         <label class="chk"><input data-k="drum.anchor" type="checkbox"> Steady backbeat</label>
         <label class="chk"><input data-k="drum.motion" type="checkbox"> Movement hits</label>
         <label>Tune<input data-k="drum.tune" type="range" min="0" max="1" step="0.01"></label>
-        <label>Kit<select data-k="drum.kit"><option value="analog">Analog</option><option value="tight">Tight</option><option value="boom">Boom</option></select></label>
+        <label>Kit<select data-k="drum.kit"><option value="analog">Analog</option><option value="tight">Tight</option><option value="boom">Boom</option><optgroup label="illi kits"><option value="em-sub">Sub boom</option><option value="em-dust">Beatfreaq dust</option></optgroup></select></label>
       </div>
       <div class="maps"></div>
     </div>
@@ -768,6 +770,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
     <details class="help"><summary>How it works &amp; shortcuts</summary>
       <p>In this app the synth's "picture" is normally the visuals output itself (see the Loop tab), so what you hear changes what you see, which changes what you hear. You can also load an image or video, or turn on the webcam, and mix it in. A scan line sweeps across the picture in time with the tempo, like a playhead over a graphic score.</p>
       <p><b>Image score</b>: each step of the scan, the brightest spots in that slice of the picture become notes. Higher in the frame is higher in pitch, and everything is kept in your key and scale. <b>Pad</b> holds chords that change each bar, picked from the picture's colour (or where the light sits). <b>Spectral scanner</b> plays the whole scan line at once as a spectrum, the way early optical synths read drawn sound. <b>Drums</b> come from texture along the scan line (bottom of the frame → kick, middle → snare, top → hats) and from movement: wave at the webcam to play hits. <b>Texture</b> is filtered noise that follows the detail in the picture.</p>
+      <p><b>illi voices</b>: the Sound menus also hold leads, pads and drum kits modelled on illi's own tracks: dark, warm and bass-heavy, with soft attacks, gliding leads, sub kicks and dusty sampler drums. Try the illi scenes.</p>
       <p>Each mapping picks one picture feature: <b>brightness</b>, <b>darkness</b>, <b>contrast</b>, <b>colour</b> (saturation), <b>hue</b>, <b>red / green / blue</b>, <b>detail</b> (edges), <b>motion</b>, where the light is (<b>light X / Y</b>), where the movement is (<b>motion X / Y</b>), the brightness under the <b>scan line</b>, or a slow LFO. <i>Base</i> is the resting value, <i>amount</i> is how far the picture pushes it (left of centre pushes the other way).</p>
       <p><b>Sampler</b> (each has Volume, Mute and Unload, which empties it; use <i>＋ Add sampler</i> for up to three, each with its own audio, mode and mappings; how many are open is saved with scenes, the audio itself is not): load any audio (a loop, a beat, a field recording), or tap <i>● Record</i> to capture a take (on a computer it records the microphone in the page, tap Stop when done, silence at the ends is trimmed; on a phone it opens the camera app, which records sound reliably, and the sound of that clip is sliced), and it is cut at its hits, like a beat-slicing sampler. Slice sensitivity and Max slices set how many pieces you get; tap the waveform to hear a slice. Then the picture plays them: <i>Motion pads</i> splits the frame into a grid and movement in a square fires its slice (great with the camera); <i>Scan line</i> plays the slice picked by the brightest spot as the line sweeps; <i>Movement hits</i> fires on sudden movement, left-to-right picks the slice; <i>In order</i> plays the slices back on the beat, and movement makes it stutter. Snap to the beat keeps it in time. The audio file is not saved with scenes: load it again next time. MIDI: slices go out on channel 11 from note 36.</p>
       <p><b>Scenes</b> store every sound setting. They're kept in this browser; Export saves them to a file you can back up or Import elsewhere.</p>
@@ -5434,7 +5437,7 @@ ROOT.querySelectorAll('[data-m]').forEach(el=>{
 });
 function onParam(k){
   if (!A) return;
-  if (k==='pad.wave') A.pad.oscs.forEach(o=>o.type=S.p['pad.wave']);
+  if (k==='pad.wave') A.pad.oscs.forEach(o=>padWave(o,S.p['pad.wave']));
   if (k==='master') A.master.gain.setTargetAtTime(S.p.master, A.ctx.currentTime, .05);
 }
 function onSmpParam(k){ const m=/^(smp\d?)\.(sens|max)$/.exec(k); if (m) SAMPLERS[SMP_SLOTS.indexOf(m[1])].slice(); }
@@ -5621,12 +5624,15 @@ function buildAudio(){
   for (const [k,ds,rs] of [['arp',.55,.45],['pad',.15,.6],['spec',.2,.5],['drum',.08,.12],['smp',.15,.25],['smp2',.15,.25],['smp3',.15,.25],['noise',.3,.5]]){
     const b=G(0); const so=window.EM_strip?EM_strip('as-'+k,ctx):null, o=so?so.out:b; if (so){ b.connect(so.in); so.out.disconnect(); } o.connect(a.sum); const d=G(ds), r=G(rs); o.connect(d).connect(a.dSend); o.connect(r).connect(a.rSend); if (so) o.connect(so.an); a.bus[k]=b;
   }
+  // illi 'Beatfreaq dust' kit: a stepped, saturated crunch in front of the drum bus
+  a.crush=ctx.createWaveShaper(); { const c=new Float32Array(4096); for (let i=0;i<4096;i++){ const x=i/2047.5-1; c[i]=Math.tanh(Math.round(x*24)/24*2.2)*.8; } a.crush.curve=c; }
+  a.crushLP=ctx.createBiquadFilter(); a.crushLP.type='lowpass'; a.crushLP.frequency.value=7500; a.crush.connect(a.crushLP).connect(a.bus.drum);
   // pad: 4 voices x 2 detuned oscillators -> filter
-  a.pad={oscs:[], filt:ctx.createBiquadFilter()}; a.pad.filt.type='lowpass'; a.pad.filt.Q.value=3; a.pad.filt.frequency.value=800;
+  a.pad={oscs:[], pans:[], filt:ctx.createBiquadFilter()}; a.pad.filt.type='lowpass'; a.pad.filt.Q.value=3; a.pad.filt.frequency.value=800;
   a.pad.filt.connect(a.bus.pad);
   const lfo=ctx.createOscillator(); lfo.frequency.value=.13; const lg=G(250); lfo.connect(lg).connect(a.pad.filt.frequency); lfo.start();
   for (let v=0;v<4;v++){ const vg=G(.11); vg.connect(a.pad.filt);
-    for (let o=0;o<2;o++){ const os=ctx.createOscillator(); os.type=S.p['pad.wave']; os.frequency.value=mtof(57); os.connect(vg); os.start(); a.pad.oscs.push(os); } }
+    for (let o=0;o<2;o++){ const os=ctx.createOscillator(); padWave(os,S.p['pad.wave'],ctx); os.frequency.value=mtof(57); const pn=ctx.createStereoPanner(); os.connect(pn).connect(vg); os.start(); a.pad.oscs.push(os); a.pad.pans.push(pn); } }
   // spectral bank
   a.spec={oscs:[],gains:[],key:''}; a.spec.out=G(1); a.spec.out.connect(a.bus.spec);
   for (let i=0;i<48;i++){ const o=ctx.createOscillator(); o.type='sine'; const g=G(0); o.connect(g).connect(a.spec.out); o.start(); a.spec.oscs.push(o); a.spec.gains.push(g); }
@@ -5681,6 +5687,7 @@ function changeChord(t){
   const sc=SCALES[S.p.scale]||SCALES.minor, n=sc.length;
   let deg;
   if (S.p.chordFrom==='cycle'){ deg=[0,5,3,4][cycleIdx++%4]; }
+  else if (S.p.chordFrom==='emcycle'){ deg=[0,6,2,5][cycleIdx++%4]; }
   else { const v=S.p.chordFrom==='cy'?1-F.cy:S.p.chordFrom==='bright'?F.bright:F.hue; deg=[0,5,3,4,2,6,1][Math.min(6,Math.floor(v*7))]; }
   deg=deg%n; chordDeg=deg;
   const b=baseMidi()-12+12*(n<6?0:0);
@@ -5711,11 +5718,13 @@ function arpNote(t,m,vel,pan,tone,dur){
   const g=ctx.createGain(), fl=ctx.createBiquadFilter(), p=ctx.createStereoPanner();
   fl.type='lowpass'; fl.Q.value=w==='pluck'?6:1.5;
   const c0=Math.min(16000,f*1.5+300+tone*9000);
+  if (!w.startsWith('em-')){
   fl.frequency.setValueAtTime(c0,t); fl.frequency.exponentialRampToValueAtTime(Math.max(f*1.2,200), t+(w==='pluck'?Math.min(dur,.25):dur));
-  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.32,t+.006); g.gain.exponentialRampToValueAtTime(.0005,t+dur);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.32,t+.006); g.gain.exponentialRampToValueAtTime(.0005,t+dur); }
   p.pan.value=pan; fl.connect(g).connect(p).connect(A.bus.arp);
   const end=t+dur+.05;
-  if (w==='fm'){
+  if (w.startsWith('em-')){ emLead(w,t,f,vel,tone,dur,fl,g); }
+  else if (w==='fm'){
     const car=ctx.createOscillator(), mod=ctx.createOscillator(), mg=ctx.createGain();
     car.frequency.value=f; mod.frequency.value=f*3.5; mg.gain.setValueAtTime(f*(1+tone*5),t); mg.gain.exponentialRampToValueAtTime(f*.05+1,t+dur);
     mod.connect(mg).connect(car.frequency); car.connect(fl); car.start(t); mod.start(t); car.stop(end); mod.stop(end);
@@ -5740,6 +5749,7 @@ function drumStep(i,col,n,t){
   if (hat){ const open=s16%4===2&&hat>.7; playHat(t,hat,open); hit(col,n,0,3,t,.12,'#7cf2c8',true); midiNote(9,open?46:42,Math.round(hat*110),t,.05); }
 }
 function playKick(t,v,tune){
+  if (S.p['drum.kit'].startsWith('em-')) return emKick(t,v,tune);
   const ctx=A.ctx, kit=S.p['drum.kit'], o=ctx.createOscillator(), g=ctx.createGain();
   const f0=(kit==='boom'?110:kit==='tight'?190:150)*(.7+tune*.6), f1=(kit==='boom'?38:52)*(.8+tune*.4), len=kit==='boom'?.9:kit==='tight'?.22:.45;
   o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+.11);
@@ -5748,6 +5758,7 @@ function playKick(t,v,tune){
   if (kit==='tight'){ const c=ctx.createBufferSource(); c.buffer=A.noiseBuf; const cg=ctx.createGain(); cg.gain.setValueAtTime(v*.4,t); cg.gain.exponentialRampToValueAtTime(.001,t+.015); c.connect(cg).connect(A.bus.drum); c.start(t,Math.random()); c.stop(t+.03); }
 }
 function playSnare(t,v,tune){
+  if (S.p['drum.kit'].startsWith('em-')) return emSnare(t,v,tune);
   const ctx=A.ctx, kit=S.p['drum.kit'], len=kit==='tight'?.12:.22;
   const nz=ctx.createBufferSource(); nz.buffer=A.noiseBuf; const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=900+tune*1400; const ng=ctx.createGain();
   ng.gain.setValueAtTime(v*.7,t); ng.gain.exponentialRampToValueAtTime(.001,t+len); nz.connect(hp).connect(ng).connect(A.bus.drum); nz.start(t,Math.random()); nz.stop(t+len+.02);
@@ -5755,9 +5766,88 @@ function playSnare(t,v,tune){
   og.gain.setValueAtTime(v*.5,t); og.gain.exponentialRampToValueAtTime(.001,t+.1); o.connect(og).connect(A.bus.drum); o.start(t); o.stop(t+.12);
 }
 function playHat(t,v,open){
+  if (S.p['drum.kit'].startsWith('em-')) return emHat(t,v,open);
   const ctx=A.ctx, len=open?.3:.045, nz=ctx.createBufferSource(); nz.buffer=A.noiseBuf;
   const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=7000; const g=ctx.createGain();
   g.gain.setValueAtTime(v*.35,t); g.gain.exponentialRampToValueAtTime(.001,t+len); nz.connect(hp).connect(g).connect(A.bus.drum); nz.start(t,Math.random()); nz.stop(t+len+.02);
+}
+
+/* ---------- illi voices (modelled on illi's tracks: dark tilt, soft attacks, glides, sub kicks, dusty drums) ---------- */
+const EM_WAVES={}; // custom pad waves, built once per context
+function emWave(ctx,name){
+  const key=name; if (EM_WAVES[key] && EM_WAVES[key].ctx===ctx) return EM_WAVES[key].w;
+  const N=32, re=new Float32Array(N), im=new Float32Array(N);
+  for (let n=1;n<N;n++){
+    let a=0;
+    if (name==='em-octave') a=({1:1,2:.82,3:.05,4:.36,6:.08,8:.05})[n]||0;           // even-heavy organ: the 'Sample' stem + Costa Rica
+    else if (name==='em-hollow') a=n%2?Math.pow(n,-1.15)*Math.exp(-(n-1)/9):0;          // odd, hollow: sun day
+    else if (name==='em-dark') a=Math.exp(-(n-1)/3.2)/n;                                // saw with a steep tilt: dark synth groove
+    im[n]=a;
+  }
+  const w=ctx.createPeriodicWave(re,im); EM_WAVES[key]={ctx,w}; return w;
+}
+function padWave(o,w,ctx){ if (w&&w.startsWith('em-')) o.setPeriodicWave(emWave(ctx||A.ctx,w)); else o.type=w||'sawtooth'; }
+let emLastLead=0;
+function emLead(w,t,f,vel,tone,dur,fl,g){
+  const ctx=A.ctx, end=t+dur+.08, nodes=[];
+  const O=(type,fr)=>{ const o=ctx.createOscillator(); o.type=type; o.frequency.value=fr; nodes.push(o); return o; };
+  if (w==='em-beep'){
+    // Communication is difficult 'Beep Bloop': sine with a 7x FM shimmer, a tiny downward blip, ~90 ms body
+    const d=Math.min(dur,.09+dur*.25), car=O('sine',f), mod=O('sine',f*7), mg=ctx.createGain();
+    car.frequency.setValueAtTime(f*1.06,t); car.frequency.exponentialRampToValueAtTime(f,t+.02);
+    mg.gain.setValueAtTime(f*(.6+tone*1.4),t); mg.gain.exponentialRampToValueAtTime(f*.02+1,t+d*.6);
+    mod.connect(mg).connect(car.frequency); car.connect(fl);
+    fl.frequency.value=Math.min(9000,3500+tone*5000); fl.Q.value=.7;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.34,t+.004); g.gain.exponentialRampToValueAtTime(.0005,t+d);
+  } else if (w==='em-buzz'){
+    // 'Loop Buzz': every harmonic loud, a nasal formant around 1-2.5 kHz, slight grit
+    const a=O('sawtooth',f), b=O('square',f*1.004), sh=ctx.createWaveShaper(), bp=ctx.createBiquadFilter(), mix=ctx.createGain();
+    const c=new Float32Array(1024); for (let i=0;i<1024;i++){ const x=i/511.5-1; c[i]=Math.sin(x*2.2); } sh.curve=c;
+    bp.type='peaking'; bp.frequency.value=1100+tone*1400; bp.Q.value=1.6; bp.gain.value=9;
+    mix.gain.value=.5; a.connect(mix); b.connect(mix); mix.connect(sh).connect(bp).connect(fl);
+    fl.frequency.setValueAtTime(Math.min(9000,2600+tone*4000),t); fl.frequency.exponentialRampToValueAtTime(Math.max(f*2,900),t+dur); fl.Q.value=1;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.2,t+.012); g.gain.setTargetAtTime(vel*.12,t+.04,.08); g.gain.exponentialRampToValueAtTime(.0005,t+dur+.05);
+  } else {
+    // glide lead: soft ~60 ms attack, glides from the last note, late vibrato, rolled off like the mixes
+    const from=emLastLead&&Math.abs(Math.log2(emLastLead/f))<1.5?emLastLead:f; emLastLead=f;
+    const a=O('triangle',from), b=O('sawtooth',from), bg=ctx.createGain(), lfo=O('sine',5.2), lg=ctx.createGain();
+    for (const o of [a,b]){ o.frequency.setValueAtTime(from,t); o.frequency.exponentialRampToValueAtTime(f,t+.07); }
+    bg.gain.value=.35; a.connect(fl); b.connect(bg).connect(fl);
+    lg.gain.setValueAtTime(0,t); lg.gain.linearRampToValueAtTime(14,t+Math.min(.35,dur*.6)); lfo.connect(lg); lg.connect(a.detune); lg.connect(b.detune);
+    fl.frequency.value=Math.min(2600+tone*1800,f*4+400); fl.Q.value=.9;
+    const att=Math.min(.06,dur*.4);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.3,t+att); g.gain.setTargetAtTime(vel*.22,t+att,.12); g.gain.exponentialRampToValueAtTime(.0005,t+dur+.06);
+  }
+  for (const o of nodes){ o.start(t); o.stop(end); }
+}
+function emOut(){ return S.p['drum.kit']==='em-dust'?A.crush:A.bus.drum; }
+function emKick(t,v,tune){
+  const ctx=A.ctx, dust=S.p['drum.kit']==='em-dust', o=ctx.createOscillator(), g=ctx.createGain(), out=emOut();
+  if (dust){ // beatfreaq: punchy 150 -> 100 Hz, short, with a click
+    o.frequency.setValueAtTime(160*(.8+tune*.4),t); o.frequency.exponentialRampToValueAtTime(100*(.8+tune*.4),t+.05);
+    g.gain.setValueAtTime(v*1.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.13);
+    const c=ctx.createBufferSource(); c.buffer=A.noiseBuf; const cg=ctx.createGain(), bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2500;
+    cg.gain.setValueAtTime(v*.5,t); cg.gain.exponentialRampToValueAtTime(.001,t+.012); c.connect(bp).connect(cg).connect(out); c.start(t,Math.random()); c.stop(t+.03);
+  } else { // sub boom: 110 Hz drops to a ~46 Hz sub that rings (whole world is watchin, dahdahdunt, Costa Rica)
+    const sub=46*(.8+tune*.4); o.frequency.setValueAtTime(115*(.8+tune*.4),t); o.frequency.exponentialRampToValueAtTime(sub,t+.06); o.frequency.exponentialRampToValueAtTime(sub*.92,t+.4);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v*1.15,t+.003); g.gain.setTargetAtTime(v*.55,t+.03,.08); g.gain.exponentialRampToValueAtTime(.001,t+.45);
+  }
+  o.connect(g).connect(out); o.start(t); o.stop(t+.5);
+}
+function emSnare(t,v,tune){
+  const ctx=A.ctx, dust=S.p['drum.kit']==='em-dust', out=emOut(), len=dust?.12:.17;
+  const nz=ctx.createBufferSource(); nz.buffer=A.noiseBuf; const hp=ctx.createBiquadFilter(), lp=ctx.createBiquadFilter(), ng=ctx.createGain();
+  hp.type='highpass'; hp.frequency.value=dust?1500:900; lp.type='lowpass'; lp.frequency.value=(dust?6000:4500)*(.8+tune*.4);
+  ng.gain.setValueAtTime(v*.6,t); ng.gain.exponentialRampToValueAtTime(.001,t+len); nz.connect(hp).connect(lp).connect(ng).connect(out); nz.start(t,Math.random()); nz.stop(t+len+.02);
+  const o=ctx.createOscillator(); o.type='triangle'; const body=(dust?215:190)*(.85+tune*.3);
+  o.frequency.setValueAtTime(body*1.3,t); o.frequency.exponentialRampToValueAtTime(body,t+.03); const og=ctx.createGain();
+  og.gain.setValueAtTime(v*.55,t); og.gain.exponentialRampToValueAtTime(.001,t+(dust?.09:.13)); o.connect(og).connect(out); o.start(t); o.stop(t+.16);
+}
+function emHat(t,v,open){
+  const ctx=A.ctx, dust=S.p['drum.kit']==='em-dust', out=emOut(), len=open?(dust?.18:.26):(dust?.04:.07);
+  const nz=ctx.createBufferSource(); nz.buffer=A.noiseBuf; const bp=ctx.createBiquadFilter(), lp=ctx.createBiquadFilter(), g=ctx.createGain();
+  bp.type='highpass'; bp.frequency.value=dust?6000:5200; lp.type='lowpass'; lp.frequency.value=dust?10000:8500; // dark, rolled-off hats
+  g.gain.setValueAtTime(v*.3,t); g.gain.exponentialRampToValueAtTime(.001,t+len); nz.connect(bp).connect(lp).connect(g).connect(out); nz.start(t,Math.random()); nz.stop(t+len+.02);
 }
 function hit(col,n,k,m,t,dur,color,band){ EV.push({t,type:band?(k===2?'sKick':k===1?'sSnare':'sHat'):'sNote'}); if (EV.length>600) EV.splice(0,200); A.hits.push({col,n,k,m,t,dur:Math.max(.12,Math.min(dur,.6)),color,band}); if (A.hits.length>300) A.hits.splice(0,100); }
 
@@ -5779,6 +5869,7 @@ function updateAudio(sp){
   T(A.bus.pad.gain, S.p['pad.on']?V['pad.level']*.7:0, .2);
   T(A.pad.filt.frequency, 120*Math.pow(60,V['pad.cutoff']), .15);
   const det=V['pad.width']*28; A.pad.oscs.forEach((o,j)=>T(o.detune,(j%2?det:-det)+(j>>1)*1.5,.2));
+  if (A.pad.pans) A.pad.pans.forEach((pn,j)=>T(pn.pan,(j%2?1:-1)*Math.min(.9,V['pad.width']*(S.p['pad.wave'].startsWith('em-')?1.1:.6)),.2));
   T(A.bus.drum.gain, S.p['drum.on']?V['drum.level']:0);
   for (const P of SMP_SLOTS) T(A.bus[P].gain, S.p[P+'.on']&&!S.p[P+'.mute']&&(P==='smp'||S.p[P+'.show'])?V[P+'.level']*(S.p[P+'.vol']??1):0, .03);
   T(A.bus.noise.gain, S.p['noise.on']?V['noise.level']*.35:0, .1);
@@ -5914,6 +6005,14 @@ function recallScene(name){
   if (u) applyState(u.s); else if (PRESETS[name]) applyState(PRESETS[name]); else return;
   currentScene=name; dirty=false; renderScenes(); $('sceneInfo').textContent='Scene: '+name;
 }
+Object.assign(PRESETS,{
+  'illi · Tight Dream':{p:{key:0,scale:'minor',bpm:99,swing:.1,chordFrom:'emcycle','arp.wave':'em-glide','arp.poly':1,'arp.rows':12,'arp.oct':0,'pad.wave':'em-dark','pad.glide':.5,'pad.sev':false,'drum.kit':'em-sub','drum.anchor':true,'drum.tune':.45,'fx.dtime':'0.75'},
+    maps:{'pad.cutoff':{src:'sat',base:.18,amt:.25},'pad.width':{src:'contrast',base:.5,amt:.3},'arp.decay':{src:'sat',base:.35,amt:.3},'arp.tone':{src:'edges',base:.2,amt:.3},'fx.reverb':{src:'dark',base:.25,amt:.3},'fx.delay':{src:'none',base:.25,amt:.5}}},
+  'illi · sun day':{p:{key:0,scale:'major',bpm:64,'drum.on':false,'arp.wave':'em-beep','arp.poly':1,'arp.oct':1,'pad.wave':'em-hollow','pad.glide':.85,'pad.sev':true,chordFrom:'cy',response:.75,'fx.dtime':'1.5'},
+    maps:{'pad.level':{src:'bright',base:.45,amt:.3},'pad.cutoff':{src:'sat',base:.3,amt:.3},'pad.width':{src:'none',base:.8,amt:.5},'arp.density':{src:'contrast',base:.15,amt:.3},'fx.reverb':{src:'none',base:.55,amt:.5},'fx.delay':{src:'none',base:.45,amt:.5}}},
+  'illi · Communication':{p:{key:5,scale:'minor',bpm:112,swing:.15,chordFrom:'hue','arp.wave':'em-buzz','arp.poly':2,'arp.rows':14,'pad.wave':'em-octave','pad.sev':false,'drum.kit':'em-dust','drum.anchor':true,'fx.dtime':'0.5'},
+    maps:{'arp.decay':{src:'sat',base:.15,amt:.2},'drum.density':{src:'edges',base:.4,amt:.5},'pad.level':{src:'bright',base:.2,amt:.3},'fx.delay':{src:'motion',base:.2,amt:.5},'fx.drive':{src:'none',base:.15,amt:.5}}},
+});
 function renderScenes(){
   const sel=$('preset');
   sel.innerHTML='<option value="">Scenes…</option><optgroup label="Built-in">'+Object.keys(PRESETS).map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')+'</optgroup>'
@@ -5951,10 +6050,10 @@ $('importScenes').onchange=async e=>{
 function randomize(){
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   const p={...S.p, key:Math.floor(Math.random()*12), scale:pick(Object.keys(SCALES).filter(s=>s!=='chromatic')), bpm:Math.round(66+Math.random()*70), swing:+(Math.random()<.5?0:Math.random()*.3).toFixed(2),
-    steps:pick([8,12,16,16,24,32]), scan:pick(['lr','lr','rl','pp','tb']), chordFrom:pick(['hue','cy','bright','cycle']),
-    'arp.wave':pick(['triangle','square','sawtooth','sine','fm','pluck']), 'arp.poly':1+Math.floor(Math.random()*4), 'arp.rows':8+Math.floor(Math.random()*14), 'arp.oct':pick([-1,0,0,1]),
-    'pad.wave':pick(['sawtooth','square','triangle','sine']), 'pad.glide':+Math.random().toFixed(2), 'pad.sev':Math.random()<.6,
-    'spec.on':Math.random()<.35, 'spec.tuning':pick(['scale','harm','free']), 'drum.on':Math.random()<.75, 'drum.anchor':Math.random()<.6, 'drum.kit':pick(['analog','tight','boom']), 'drum.tune':+Math.random().toFixed(2),
+    steps:pick([8,12,16,16,24,32]), scan:pick(['lr','lr','rl','pp','tb']), chordFrom:pick(['hue','cy','bright','cycle','emcycle']),
+    'arp.wave':pick(['triangle','square','sawtooth','sine','fm','pluck','em-beep','em-buzz','em-glide']), 'arp.poly':1+Math.floor(Math.random()*4), 'arp.rows':8+Math.floor(Math.random()*14), 'arp.oct':pick([-1,0,0,1]),
+    'pad.wave':pick(['sawtooth','square','triangle','sine','em-octave','em-hollow','em-dark']), 'pad.glide':+Math.random().toFixed(2), 'pad.sev':Math.random()<.6,
+    'spec.on':Math.random()<.35, 'spec.tuning':pick(['scale','harm','free']), 'drum.on':Math.random()<.75, 'drum.anchor':Math.random()<.6, 'drum.kit':pick(['analog','tight','boom','em-sub','em-dust']), 'drum.tune':+Math.random().toFixed(2),
     'noise.on':Math.random()<.35, 'fx.dtime':pick(['0.5','0.75','1','1.5'])};
   const maps={}; for (const [k,,d] of TARGETS){ maps[k]= Math.random()<.5 ? {...d} : {src:pick(FEATURES)[0], base:+(Math.random()*.6).toFixed(2), amt:+(Math.random()*1.4-.4).toFixed(2)}; }
   maps['fx.filter']={src:'none',base:1,amt:.5}; maps['arp.level'].base=Math.max(.4,maps['arp.level'].base);
