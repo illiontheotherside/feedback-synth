@@ -357,7 +357,8 @@ W.video=[
   {t:'Welcome',b:`<p>This is a <em>video synth</em>: it listens to music and cuts, moves and colours pictures in time with it.</p><p>The tour points at one control at a time. You can use the real controls while it runs, and end it whenever you like.</p>`},
   {el:'#audioFile',t:'1 · Load a song',b:`<p>${tap} <em>Load track</em> and pick a song or any sound file. Its beats and loudness drive everything.</p><p>No song? Use the mic or live input further down in this section.</p>`},
   {el:'#mediaFile',t:'2 · Add pictures',b:`<p>Add your own <em>images or videos</em>. They go into the source pool that the synth cuts between.</p>`},
-  {el:['#genSel','#genAdd'],t:'Generative art',b:`<p>No pictures handy? Add <em>generative sources</em>: liquid light, ink bloom, moiré orbs, ribbons and more. They are drawn live and react to the music.</p>`},
+  {el:['#genSel','#genAdd'],t:'Generative art',b:`<p>No pictures handy? Add <em>generative sources</em>: Turing patterns, acrylic pour, contour lines, flow stipple, spiral blocks, glass orbs, sticker blobs, voxel relief, liquid light and more. They are drawn live and react to the music.</p>`},
+  {el:'#nlRow',t:'Look styles',b:`<p>Each new look has its own <em>style</em>: colours and variations, like neon loops or ink topo lines. <em>Auto</em> moves to the next style every 8 bars.</p>`},
   {el:'#pool',t:'The source pool',b:`<p>Everything the synth can show. ${tap} a thumbnail to switch it on or off; the ✕ removes it.</p>`},
   {el:['#playBtn','#mbar'],t:'3 · Play',b:`<p>Press <em>Play</em>. The picture now cuts on the beat. Space bar also plays and pauses.</p>`},
   {el:'#preset',t:'Scenes',b:`<p>Scenes are complete looks: effects, cuts and mappings. Pick one, or press <em>Random</em> and save what you like.</p>`},
@@ -424,7 +425,8 @@ W.combo=[
  {name:'Visuals tab',sub:'The video synth',steps:[
   {el:'#audioFile',tab:'visuals',t:'A track (optional)',b:`<p>Load a song if you want the visuals to follow it as well as the synth.</p>`},
   {el:'#mediaFile',tab:'visuals',t:'Pictures',b:`<p>Add images or videos for the visuals to cut between.</p>`},
-  {el:['#genSel','#genAdd'],tab:'visuals',t:'Generative art',b:`<p>Or add generative sources: liquid light, ink, orbs, ribbons…</p>`},
+  {el:['#genSel','#genAdd'],tab:'visuals',t:'Generative art',b:`<p>Or add generative sources: Turing patterns, acrylic pour, contour lines, glass orbs, liquid light…</p>`},
+  {el:'#nlRow',tab:'visuals',t:'Look styles',b:`<p>Pick a style for each new look, or leave it on <em>Auto</em> to change every 8 bars.</p>`},
   {el:'#vsmSec',tab:'visuals',t:'Sampler (video + sound)',b:`<p>Load or record a clip; it is cut at its hits and plays picture, sound or both.</p>`},
   {el:'#maps',tab:'visuals',t:'Mapping',b:`<p>Choose which sound feature moves which picture setting.</p>`}]},
  {name:'Record & render',sub:'Save what you made',steps:[
@@ -796,6 +798,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
         <button id="clearPool">Clear</button>
       </div>
       <div class="row"><select id="genSel" style="flex:1;min-width:0"></select></div>
+      <div class="row" id="nlRow"><span class="small">Look styles</span><label class="small">Turing <select data-nl="rd"></select></label><label class="small">Pour <select data-nl="pour"></select></label><label class="small">Contours <select data-nl="con"></select></label><label class="small">Stipple <select data-nl="stip"></select></label><label class="small">Spiral <select data-nl="spiral"></select></label><label class="small">Orbs <select data-nl="orbs"></select></label><label class="small">Stickers <select data-nl="stick"></select></label><label class="small">Relief <select data-nl="vox"></select></label></div>
       <div class="row" id="oilRow"><span class="small">Liquid light</span><label class="small">Set <select id="oilPal"></select></label><label class="small">Oil 1 <input type="color" id="oilC1"></label><label class="small">Oil 2 <input type="color" id="oilC2"></label><label class="small">Oil 3 <input type="color" id="oilC3"></label><label class="small">Light <input type="color" id="oilBg"></label><label class="small"><input type="checkbox" id="oilDisc"> Projector circle</label></div>
       <div class="row" id="orbRow"><span class="small">Moiré orbs</span><label class="small">Shape <select id="orbShape"><option value="auto">Auto (changes every 4 bars)</option><option value="sphere">Sphere</option><option value="ribbed">Ribbed orb</option><option value="wavy">Wavy blob</option><option value="bubbles">Bubbles</option><option value="horizon">Horizon glow</option><option value="tunnel">Spiral tunnel</option></select></label><label class="small">Palette <select id="orbPal"></select></label></div>
       <div class="row" id="inkRow"><span class="small">Ink bloom colours</span><label class="small">Ink <input type="color" id="inkC1"></label><label class="small">Ink 2 <input type="color" id="inkC2"></label><label class="small">Paper <input type="color" id="inkBg"></label><button id="inkReset" title="Back to black ink on white">Reset</button></div>
@@ -4300,6 +4303,14 @@ const GENS = {
   'Ink bloom': { credit:'ink in water, particle flow', make(){ return inkGen(); }},
   'Moiré orbs': { credit:'fine-line gradient shapes', make(){ return orbGen(); }},
   'Liquid light': { credit:'60s oil projector light show', make(){ return oilGen(); }},
+  'Turing patterns': { credit:'reaction-diffusion', make(){ return turingGen(); }},
+  'Acrylic pour': { credit:'paint pour cells', make(){ return pourGen(); }},
+  'Contour lines': { credit:'neon loops and ink topo lines', make(){ return contourGen(); }},
+  'Flow stipple': { credit:'dotted flow field', make(){ return stippleGen(); }},
+  'Spiral blocks': { credit:'striped colour vortex', make(){ return spiralGen(); }},
+  'Orbs & trails': { credit:'glass orbs with tube trails', make(){ return trailGen(); }},
+  'Sticker blobs': { credit:'jagged comic rings', make(){ return stickerGen(); }},
+  'Voxel relief': { credit:'extruded block terrain', make(){ return voxelGen(); }},
 };
 /* ---- op-art ribbons: shared helpers ---- */
 function palMix(P,v){ v=((v%1)+1)%1*P.length; const i=Math.floor(v), f=v-i, a=P[i], b=P[(i+1)%P.length], e=f*f*(3-2*f);
@@ -4542,6 +4553,398 @@ function oilGen(){
   set(); const upd=()=>{ S.oil={c1:$('oilC1').value, c2:$('oilC2').value, c3:$('oilC3').value, bg:$('oilBg').value, disc:$('oilDisc').checked}; save(); set(); };
   ['oilC1','oilC2','oilC3','oilBg'].forEach(id=>$(id).addEventListener('input',upd)); $('oilDisc').onchange=upd;
   ps.onchange=()=>{ if (OIL_SETS[ps.value]){ S.oil=Object.assign({disc:$('oilDisc').checked},OIL_SETS[ps.value]); save(); set(); } };
+})();
+/* ============================================================
+   v28 new looks (from illi's reference images, 2026-11-22): Turing patterns, acrylic pour cells,
+   contour lines, flow stipple, spiral blocks, orbs & trails, sticker blobs, voxel relief.
+   Each look has a style menu (Auto changes it every 8 bars). Shader looks draw into one shared
+   WebGL2 canvas, then copy into their own 2D canvas like every other generative source.
+   ============================================================ */
+const NL_COARSE=matchMedia('(pointer:coarse)').matches||/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const GLX=(function(){
+  let cv=null, gl=null, progs={}, gen=0, failed=false;
+  const VS='#version 300 es\nin vec2 p; void main(){ gl_Position=vec4(p,0.,1.); }';
+  const HEAD=`#version 300 es
+precision highp float;
+uniform vec2 uRes, uTexRes; uniform float uT,uBass,uMid,uHigh,uLevel,uBeat,uMode,uA,uB;
+uniform vec3 uP0,uP1,uP2,uP3,uP4; uniform sampler2D uTex;
+out vec4 o;
+float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+vec2 hash2(vec2 p){ float n=hash(p); return vec2(n,hash(p+n*19.19+3.1)); }
+float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p), u=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y); }
+float fbm(vec2 p){ float s=0.,a=.5; mat2 m=mat2(1.6,1.2,-1.2,1.6); for(int i=0;i<5;i++){ s+=a*vnoise(p); p=m*p; a*=.5; } return s/.97; }
+float fbm3(vec2 p){ float s=0.,a=.5; mat2 m=mat2(1.6,1.2,-1.2,1.6); for(int i=0;i<3;i++){ s+=a*vnoise(p); p=m*p; a*=.5; } return s/.875; }
+vec3 palAt(float i){ i=mod(floor(i),5.); return i<.5?uP0: i<1.5?uP1: i<2.5?uP2: i<3.5?uP3: uP4; }
+vec3 pal5(float x){ x=fract(x)*5.; float i=floor(x); return mix(palAt(i),palAt(i+1.),smoothstep(0.,1.,fract(x))); }
+`;
+  function init(){
+    if (gl && !gl.isContextLost()) return gl; if (failed) return null;
+    cv=document.createElement('canvas'); cv.width=cv.height=16;
+    gl=cv.getContext('webgl2',{alpha:false,antialias:false,depth:false,preserveDrawingBuffer:true});
+    if (!gl){ failed=true; return null; }
+    cv.addEventListener('webglcontextlost',e=>{ e.preventDefault(); gl=null; progs={}; },false);
+    gen++; progs={};
+    const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+    return gl;
+  }
+  function prog(key,fs){
+    if (progs[key]) return progs[key];
+    const mk=(t,s)=>{ const sh=gl.createShader(t); gl.shaderSource(sh,s); gl.compileShader(sh); if (!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) throw new Error(key+': '+gl.getShaderInfoLog(sh)); return sh; };
+    const p=gl.createProgram(); gl.attachShader(p,mk(gl.VERTEX_SHADER,VS)); gl.attachShader(p,mk(gl.FRAGMENT_SHADER,HEAD+fs)); gl.bindAttribLocation(p,0,'p'); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(key+': '+gl.getProgramInfoLog(p));
+    const u={}, n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS); for (let i=0;i<n;i++){ const a=gl.getActiveUniform(p,i); u[a.name]=gl.getUniformLocation(p,a.name); }
+    return progs[key]={p,u};
+  }
+  function run(key,fs,w,h,U,tex){
+    const g=init(); if (!g) return null;
+    if (cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+    const P=prog(key,fs); g.viewport(0,0,w,h); g.useProgram(P.p);
+    for (const k in U){ const l=P.u[k]; if (l==null) continue; const v=U[k];
+      if (typeof v==='number') g.uniform1f(l,v); else if (v.length===2) g.uniform2f(l,v[0],v[1]); else g.uniform3f(l,v[0],v[1],v[2]); }
+    if (P.u.uRes) g.uniform2f(P.u.uRes,w,h);
+    if (tex){ g.activeTexture(g.TEXTURE0); g.bindTexture(g.TEXTURE_2D,tex); if (P.u.uTex) g.uniform1i(P.u.uTex,0); }
+    g.drawArrays(g.TRIANGLE_STRIP,0,4); return cv;
+  }
+  return {init, run, get gl(){ return gl; }, get gen(){ return gen; }};
+})();
+function nlHash(n){ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); }
+function nlRGB(h){ const n=parseInt(h.slice(1),16); return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]; }
+// styles per look; 'auto' moves to the next one every 8 bars
+const NL_STYLES={
+  rd:{ 'Brain coral':{mode:0, pal:['#1b1f5e','#b9a7ff','#5fd38a','#e8d36a','#ff7fc8'], fk:[[.0545,.062],[.029,.057]]},
+       'Acid stripes':{mode:0, pal:['#0a3cff','#2fbf4a','#f2f2f2','#7a2cff','#ff3f8e'], fk:[[.029,.057],[.039,.058]]},
+       'Zebra':{mode:1, pal:['#0a0a0a','#f4f1ea','#ff3fa4','#3ee0c8','#ffd23f'], fk:[[.039,.058],[.0367,.0649]]},
+       'Line maze':{mode:2, pal:['#f7f5f0','#141414','#141414','#141414','#141414'], fk:[[.029,.057],[.029,.057]]} },
+  pour:{ 'Neon pour':{mode:0, pal:['#2a0f5c','#ff7a1a','#38e0b0','#ff3fa4','#3a5cff']},
+         'Pastel pour':{mode:1, pal:['#f6a6c1','#ffb27a','#c8b6ff','#fff1e0','#9fe3cf']},
+         'Galaxy':{mode:0, pal:['#0b0a2a','#6a2cff','#ff4fd8','#23c4ff','#f2f2ff']},
+         'Ember':{mode:0, pal:['#1a0505','#ff4d00','#ffb000','#b3123b','#3b1f5c']},
+         'Seafoam':{mode:1, pal:['#0e5a6b','#5fd3c6','#e9fbf5','#2b8fbf','#f3c98b']} },
+  con:{ 'Neon loops':{mode:0, pal:['#0b0f2e','#ff4fa3','#ffd23f','#3ee0c8','#8a7bff']},
+        'Ink topo':{mode:1, pal:['#efe9dc','#161412','#2a2420','#161412','#3a2f28']},
+        'Sunset strata':{mode:1, pal:['#1d1030','#ff7a3a','#ff3d7f','#ffc94a','#8f5bff']},
+        'Blueprint':{mode:0, pal:['#0d3b66','#e8f1ff','#9cc9ff','#ffffff','#5fa8ff']} },
+  stip:{ 'Ink':{bg:'#f6f4ef', ink:'#111111'}, 'Chalk':{bg:'#121418', ink:'#ece8df'}, 'Blue print':{bg:'#1d3a8a', ink:'#f3efe4'}, 'Red on cream':{bg:'#f2e8dc', ink:'#c8281e'} },
+  spiral:{ 'Mid-century':{bg:'#efe6d6', cols:['#7fc4bd','#f2c14e','#4a3b33','#d2452f','#2c4f8f','#a9b7c6','#e2d3b8']},
+           'Neon':{bg:'#0b0b12', cols:['#ff3fa4','#3ee0c8','#ffd23f','#7a5cff','#ff7a1a','#2b2b3a']},
+           'Mono':{bg:'#f2f0ea', cols:['#111111','#3a3a3a','#8a8a8a','#c9c6be','#111111']},
+           'Candy':{bg:'#fff1ec', cols:['#ff8fb1','#ffd166','#7bdff2','#b28dff','#ef476f','#06d6a0']} },
+  orbs:{ 'Sunset glass':{bg:['#ff3b2f','#ff8a1f'], halo:'#7a6cff', cols:['#3a6bff','#ff6a1a','#121318','#8fd3ff','#ffcf9a','#7a6cff']},
+         'Night':{bg:['#090c2a','#3a1450'], halo:'#ff4fa3', cols:['#3ee0c8','#ff4fa3','#ffd23f','#0b0b12','#8a7bff']},
+         'Mint':{bg:['#bff0e0','#ffd6e8'], halo:'#ffffff', cols:['#ff6a8a','#2b6bff','#ffb000','#1a1a1a','#00b39a']},
+         'Ultra':{bg:['#3b2bff','#ff3fa4'], halo:'#ffd23f', cols:['#ffd23f','#00e0ff','#ffffff','#120a2a','#ff7a1a']} },
+  stick:{ 'Comic':{bg:'#ffffff', r1:'#e2471d', r2:'#111111', r3:'#ffffff', ln:'#111111', cores:['#ffe600','#ff1f7a','#1e88e5','#00a060','#111111']},
+          'Risograph':{bg:'#f3eee2', r1:'#ff4f9a', r2:'#1f3fb3', r3:'#f3eee2', ln:'#1f3fb3', cores:['#ffd400','#00b3a4','#ff4f9a','#1f3fb3']},
+          'Night':{bg:'#101014', r1:'#ffd23f', r2:'#ff3fa4', r3:'#101014', ln:'#f2f2f2', cores:['#3ee0c8','#ff3fa4','#ffd23f','#f2f2f2','#7a5cff']} },
+  vox:{ 'Glacier':{bg:'#0f2a44', top:'#eaf6ff', left:'#9fd0ee', right:'#4f9dcc', peak:'#ffffff'},
+        'Desert':{bg:'#2b1a2e', top:'#f3d9a4', left:'#d89a5a', right:'#a35f35', peak:'#fff1c9'},
+        'Neon grid':{bg:'#05040f', top:'#ff4fa3', left:'#5b2bff', right:'#1a0f4a', peak:'#ffd23f'},
+        'Concrete':{bg:'#1a1a1c', top:'#d8d6d0', left:'#9b9892', right:'#5d5a55', peak:'#ffffff'} },
+};
+function nlStyle(key,st,c){
+  if (c.beat){ st.beats=(st.beats||0)+1; if (st.beats%32===0) st.i=(st.i||0)+1; }
+  const set=(S.nl||{})[key], L=NL_STYLES[key], names=Object.keys(L);
+  return L[set&&set!=='auto'&&L[set]?set:names[(st.i||0)%names.length]];
+}
+// palette colours glide to the new style instead of jumping
+function nlPal(st,pal,dt){ const tg=pal.map(nlRGB); if (!st.cur) st.cur=tg.map(a=>a.slice()); const k=Math.min(1,dt*2.5);
+  for (let i=0;i<5;i++) for (let j=0;j<3;j++) st.cur[i][j]+=(tg[i][j]-st.cur[i][j])*k; return st.cur; }
+function nlUni(st,sty,c,extra){ const P=nlPal(st,sty.pal,c.dt), A=c.A;
+  return Object.assign({uT:st.t, uBass:A.bass, uMid:A.mid, uHigh:A.high, uLevel:A.level, uBeat:st.kick||0, uMode:sty.mode, uP0:P[0], uP1:P[1], uP2:P[2], uP3:P[3], uP4:P[4]}, extra||{}); }
+function nlBlit(g,w,h,key,fs,U,tex){
+  const sc=NL_COARSE?.6:(w>1400?.8:1), rw=Math.max(32,Math.round(w*sc)), rh=Math.max(32,Math.round(h*sc));
+  const cv=GLX.run(key,fs,rw,rh,U,tex);
+  if (!cv){ g.fillStyle='#111'; g.fillRect(0,0,w,h); g.fillStyle='#aaa'; g.font=`${Math.round(h/24)}px sans-serif`; g.fillText('This look needs WebGL2',w*.05,h*.5); return; }
+  g.imageSmoothingEnabled=true; g.drawImage(cv,0,0,w,h);
+}
+function nlKick(st,c){ st.kick=Math.max((st.kick||0)*Math.pow(.02,c.dt), c.beat?1:(c.onset?.5:0)); }
+
+/* ---- Contour lines: neon loops on navy, or ink topo lines folding round a knot ---- */
+const NL_CON_FS=`
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/min(uRes.x,uRes.y);
+  float f, N, lw;
+  if (uMode<.5){
+    vec2 p=uv*2.4+vec2(uA,0.);
+    vec2 q=vec2(fbm3(p*1.1+vec2(0.,uT*.07)), fbm3(p*1.1+vec2(4.1,-uT*.06)));
+    f=fbm(p+q*(1.4+uBass*.9)+uT*.03);
+    N=12.+uMid*4.; lw=1.5;
+  } else {
+    vec2 p=uv*1.3+vec2(uA*.3,0.);
+    vec2 q=vec2(fbm3(p*1.1+uT*.05), fbm3(p*1.1+vec2(3.3,7.1)-uT*.04));
+    f=uv.y*.9+(q.x-.5)*(2.2+uBass*1.2)+.3*sin(uv.x*3.+q.y*5.+uT*.2)+.08*fbm(p*3.+q*2.);
+    N=24.+uMid*8.; lw=1.0;
+  }
+  f+=.05*uBeat*sin(length(uv)*22.-uT*9.);
+  float x=f*N, fw=max(fwidth(x),1e-4), d=abs(fract(x+.5)-.5)/fw;
+  float px=uRes.y/720.; lw*=px*(1.+uHigh*.8);
+  float a=1.-smoothstep(lw-.7,lw+.7,d);
+  float k=floor(x+.5)+floor(fbm3(uv*.9+7.)*4.);
+  float ki=mod(k,4.); vec3 lc= ki<.5?uP1: ki<1.5?uP2: ki<2.5?uP3: uP4;
+  vec3 col=uP0;
+  if (uMode<.5){ col+=lc*exp(-d/(lw*3.5))*.28*(1.+uLevel); col=mix(col,lc,a); }
+  else { col*=1.-clamp((fw-.25)*.5,0.,.3); col=mix(col,lc,a*(1.-clamp((fw-.45)*1.5,0.,.6))); }
+  col*=1.-.25*dot(uv,uv);
+  o=vec4(col,1.);
+}`;
+function contourGen(){ const st={t:0,i:0};
+  return { draw(g,w,h,c){ const A=c.A, sty=nlStyle('con',st,c); nlKick(st,c);
+    st.t+=c.dt*(.35+A.level*.9)*(.5+c.speed); st.a=(st.a||0)+c.dt*.01;
+    nlBlit(g,w,h,'con',NL_CON_FS,nlUni(st,sty,c,{uA:st.a}));
+  }}; }
+
+/* ---- Acrylic pour: marbled paint bands with lacing cells that drift with the flow ---- */
+const NL_POUR_FS=`
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/min(uRes.x,uRes.y);
+  vec2 p=uv*1.1+vec2(uA,uA*.4); float t=uT;
+  vec2 q=vec2(fbm(p+vec2(0.,t*.06)), fbm(p+vec2(5.2,1.3)-t*.05));
+  vec2 r=vec2(fbm(p+3.2*q+vec2(1.7,9.2)+t*.07), fbm(p+3.2*q+vec2(8.3,2.8)-t*.05));
+  float f=fbm(p+(2.4+uMid*.6)*r);
+  float b=f*2.3+r.x*1.1+dot(uv,vec2(.3,.18))+uB;
+  vec3 col=pal5(b);
+  float s=abs(fract(b*3.)-.5)/max(fwidth(b*3.),1e-4);
+  col=mix(col,mix(col,vec3(1.),.55),(1.-smoothstep(0.,1.2+uHigh*2.,s))*.55);
+  col*=.82+.18*smoothstep(.2,.65,f);
+  vec2 cp=(p*1.25+r*.45)*(7.5-uBass*1.8);
+  vec2 ci=floor(cp), cf=fract(cp); float d1=9.; vec2 id=vec2(0.);
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=vec2(i,j), h2=hash2(ci+g);
+    vec2 pt=g+.5+.3*sin(6.2832*h2+t*.25)-cf; float rs=.2+.3*hash(ci+g+3.7)*hash(ci+g+5.1)+.12*hash(ci+g+8.); float d=length(pt)/rs;
+    if (d<d1){ d1=d; id=ci+g; } }
+  float zone=smoothstep(.35,.55,fbm3(p*.9+r*.7+2.));
+  float on=step(hash(id+9.1),zone*1.15);
+  float aa=fwidth(d1)+.02;
+  float inside=(1.-smoothstep(1.-aa,1.,d1))*on;
+  float rim=(smoothstep(.72,.86,d1)-smoothstep(1.-aa,1.+aa,d1))*on;
+  float halo=(smoothstep(.95,1.05,d1)-smoothstep(1.05,1.35,d1))*on;
+  vec3 cin, crim;
+  if (uMode<.5){ cin=mix(uP0,col*.35,.5)*(.7+.3*d1); crim=mix(pal5(b+.35),vec3(1.),.25); col*=1.-halo*.35; }
+  else { cin=mix(col,vec3(.86,.83,.97),.6)*(.92+.12*(1.-d1)); crim=vec3(1.); float in2=1.-smoothstep(.42,.46,abs(d1-.5)+.42); cin=mix(cin,crim,in2*.25); col*=1.-halo*.12; }
+  col=mix(col,cin,inside); col=mix(col,crim,clamp(rim,0.,1.)*.9);
+  vec2 hl=uv-vec2(-.35,.3); col+=.07*exp(-dot(hl,hl)*3.);
+  o=vec4(col,1.);
+}`;
+function pourGen(){ const st={t:0,i:0,a:0,at:0};
+  return { draw(g,w,h,c){ const A=c.A, sty=nlStyle('pour',st,c); nlKick(st,c);
+    st.t+=c.dt*(.3+A.mid*1.2)*(.5+c.speed);
+    if (c.beat) st.at+=.05+A.bass*.12; st.a+=(st.at-st.a)*Math.min(1,c.dt*2.5);
+    st.b=(st.b||0)+c.dt*.01;
+    nlBlit(g,w,h,'pour',NL_POUR_FS,nlUni(st,sty,c,{uA:st.a, uB:st.b}));
+  }}; }
+
+/* ---- Turing patterns: reaction-diffusion (Gray-Scott) grown on the CPU, coloured by a shader.
+   Beats seed new growth, onsets wipe holes that grow back, the texture changes across the picture ---- */
+const NL_RD_FS=`
+void main(){
+  vec2 uv=gl_FragCoord.xy/uRes*(uMode>1.5?2.4:1.);
+  float v=texture(uTex,uv).r;
+  float fw=max(fwidth(v),1e-4);
+  vec2 a=vec2(uRes.x/uRes.y,1.);
+  float region=fbm3(uv*a*1.5+vec2(uT*.03,0.));
+  vec3 col;
+  if (uMode<.5){
+    float e=smoothstep(.42-fw,.42+fw,v);
+    vec3 ground=pal5(region*1.3+uB), pat=pal5(region*1.3+uB+.4);
+    col=mix(ground*.38,pat,e);
+    float edge=1.-smoothstep(0.,fw*2.6,abs(v-.42)); col=mix(col,pal5(region+uB+.7)+.15,edge*.85);
+    float e2=1.-smoothstep(0.,fw*2.,abs(v-.66)); col=mix(col,vec3(1.),e2*(.3+uHigh*.4));
+    vec2 gd=fract(gl_FragCoord.xy/(3.2*max(1.,uRes.y/720.)))-.5; col*=.86+.14*smoothstep(.36,.18,length(gd));
+  } else if (uMode<1.5){
+    float e=smoothstep(.42-fw,.42+fw,v); col=mix(uP0,uP1,e);
+    float edge=1.-smoothstep(0.,fw*2.2,abs(v-.42)); vec3 nc=region<.4?uP2:region<.6?uP3:uP4; col=mix(col,nc,edge*(.6+uLevel*.4));
+  } else {
+    vec2 cc=(gl_FragCoord.xy-.5*uRes)/min(uRes.x,uRes.y);
+    float ang=atan(cc.y,cc.x), R=.43+.015*sin(ang*7.+uT)+uBass*.035;
+    float m=1.-smoothstep(R-.004,R+.004,length(cc));
+    float l=1.-smoothstep(fw*.6,fw*1.6,abs(v-.42));
+    float ring=1.-smoothstep(.0015,.004,abs(length(cc)-R));
+    col=mix(uP0,uP1,max(l*m,ring*.0));
+  }
+  o=vec4(col,1.);
+}`;
+function turingGen(){
+  const st={t:0,i:0,b:0}; let W=0,H=0,u=null,v=null,u2=null,v2=null,buf=null,tex=null,texGen=-1,Fc=null,Kc=null,beats=0;
+  function blob(x,y,r,c){ for (let j=-r;j<=r;j++) for (let i=-r;i<=r;i++){ if (i*i+j*j>r*r) continue; const k=((y+j+H)%H)*W+((x+i+W)%W); u[k]=.5; v[k]=.25+c.rnd()*.1; } }
+  function wipe(x,y,r){ for (let j=-r;j<=r;j++) for (let i=-r;i<=r;i++){ if (i*i+j*j>r*r) continue; const k=((y+j+H)%H)*W+((x+i+W)%W); u[k]=1; v[k]=0; } }
+  function step(){
+    for (let y=0;y<H;y++){ const ym=((y-1+H)%H)*W, y0=y*W, yp=((y+1)%H)*W;
+      for (let x=0;x<W;x++){ const xm=x?x-1:W-1, xp=x<W-1?x+1:0, k=y0+x, U=u[k], V=v[k];
+        const lu=.2*(u[y0+xm]+u[y0+xp]+u[ym+x]+u[yp+x])+.05*(u[ym+xm]+u[ym+xp]+u[yp+xm]+u[yp+xp])-U;
+        const lv=.2*(v[y0+xm]+v[y0+xp]+v[ym+x]+v[yp+x])+.05*(v[ym+xm]+v[ym+xp]+v[yp+xm]+v[yp+xp])-V;
+        const r=U*V*V, F=Fc[x], K=Kc[x];
+        u2[k]=U+lu-r+F*(1-U); v2[k]=V+.5*lv+r-(F+K)*V; } }
+    let s=u; u=u2; u2=s; s=v; v=v2; v2=s;
+  }
+  function setFK(sty,c){ const [a,b]=sty.fk, cen=(c.A.centroid||0)-.5;
+    for (let x=0;x<W;x++){ const m=.5+.5*Math.sin(x/W*6.2832*1.5+st.t*.05); Fc[x]=a[0]+(b[0]-a[0])*m+cen*.002; Kc[x]=a[1]+(b[1]-a[1])*m; } }
+  return { draw(g,w,h,c){
+    const A=c.A, sty=nlStyle('rd',st,c); nlKick(st,c);
+    if (!u){ W=NL_COARSE?140:210; H=Math.max(40,Math.round(W*h/w)); const n=W*H;
+      u=new Float32Array(n).fill(1); v=new Float32Array(n); u2=new Float32Array(n); v2=new Float32Array(n); buf=new Uint8Array(n); Fc=new Float32Array(W); Kc=new Float32Array(W);
+      for (let i=0;i<60;i++) blob((c.rnd()*W)|0,(c.rnd()*H)|0,2+((c.rnd()*3)|0),c);
+      setFK(sty,c); for (let i=0;i<(NL_COARSE?160:240);i++) step(); }
+    st.t+=c.dt*(.4+A.level)*(.5+c.speed); st.b+=c.dt*.008;
+    if (c.beat){ beats++; const k=2+((A.bass*4)|0); for (let i=0;i<k;i++) blob((c.rnd()*W)|0,(c.rnd()*H)|0,2+((c.rnd()*2)|0),c);
+      if (beats%4===0) wipe((c.rnd()*W)|0,(c.rnd()*H)|0,Math.round(W*(.05+A.bass*.08))); }
+    else if (c.onset && A.high>.4) wipe((c.rnd()*W)|0,(c.rnd()*H)|0,Math.round(W*.03));
+    setFK(sty,c);
+    const n=Math.max(2,Math.min(NL_COARSE?10:16,Math.round((5+A.level*8+(c.beat?3:0))*(.6+c.speed*.8)*Math.min(2,c.dt*60))));
+    for (let i=0;i<n;i++) step();
+    for (let k=0;k<buf.length;k++){ const q=v[k]*2.4; buf[k]=q>=1?255:q<=0?0:q*255; }
+    const gl=GLX.init(); if (!gl){ nlBlit(g,w,h,'rd',NL_RD_FS,{}); return; }
+    if (!tex||texGen!==GLX.gen){ tex=gl.createTexture(); texGen=GLX.gen; gl.bindTexture(gl.TEXTURE_2D,tex);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT); }
+    gl.bindTexture(gl.TEXTURE_2D,tex); gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,W,H,0,gl.RED,gl.UNSIGNED_BYTE,buf);
+    nlBlit(g,w,h,'rd',NL_RD_FS,nlUni(st,sty,c,{uB:st.b, uTexRes:[W,H]}),tex);
+  }}; }
+
+/* ---- Flow stipple: dots traced along a field of vortices and sinks, like stippled pen drawings ---- */
+function stippleGen(){
+  const st={i:0}; let P=null,N=0,V=null,t=0,lastBg='';
+  return { draw(g,w,h,c){
+    const A=c.A, M=Math.min(w,h), sty=nlStyle('stip',st,c);
+    function spawn(i){ P[i*3]=c.rnd()*w; P[i*3+1]=c.rnd()*h; P[i*3+2]=c.rnd()*.6; }
+    if (!P||lastBg!==sty.bg){ N=NL_COARSE?2600:4400; P=new Float32Array(N*3); for (let i=0;i<N;i++) spawn(i);
+      g.fillStyle=sty.bg; g.fillRect(0,0,w,h); lastBg=sty.bg;
+      if (!V) V=Array.from({length:7},(_,i)=>({x:.12+.76*c.rnd(), y:.12+.76*c.rnd(), s:(i%2?1:-1)*(.5+c.rnd()*.8), k:(c.rnd()-.6)*.8, ph:c.rnd()*6.28})); }
+    t+=c.dt*(.3+A.mid)*(.5+c.speed);
+    g.fillStyle=hexA(sty.bg,.018+A.level*.03); g.fillRect(0,0,w,h);
+    for (const v of V){ v.x+=Math.sin(t*.4+v.ph)*c.dt*.012; v.y+=Math.cos(t*.33+v.ph*1.7)*c.dt*.012; v.x=Math.min(.92,Math.max(.08,v.x)); v.y=Math.min(.92,Math.max(.08,v.y)); }
+    if (c.beat){ const v=V[Math.floor(c.rnd()*V.length)]; v.s=-v.s; v.k=(c.rnd()-.6)*.8; for (let i=0;i<N*.15;i++) spawn(Math.floor(c.rnd()*N)); }
+    const stp=M*.0022*(1+A.bass*1.4+A.level*.6)*Math.min(3,c.dt*60), ds=Math.max(1.2,M/520), path=new Path2D();
+    for (let i=0;i<N;i++){ const o=i*3; const x=P[o], y=P[o+1]; let vx=0, vy=0, near=9;
+      for (const v of V){ const dx=(x-v.x*w)/M, dy=(y-v.y*h)/M, r2=dx*dx+dy*dy+.0015; near=Math.min(near,r2);
+        vx+=(-dy*v.s+dx*v.k)/r2; vy+=(dx*v.s+dy*v.k)/r2; }
+      const a=Math.sin(x/M*3+t*.5)+Math.cos(y/M*2.6-t*.4); vx+=Math.cos(a)*2.2; vy+=Math.sin(a)*2.2;
+      const L=Math.hypot(vx,vy)||1, x2=x+vx/L*stp, y2=y+vy/L*stp;
+      path.rect(x2,y2,ds,ds);
+      const life=P[o+2]+c.dt*(.25+c.rnd()*.3);
+      if (life>1||near<.0004||x2<0||x2>w||y2<0||y2>h) spawn(i); else { P[o]=x2; P[o+1]=y2; P[o+2]=life; } }
+    g.fillStyle=hexA(sty.ink,.85); g.fill(path);
+  }}; }
+
+/* ---- Spiral blocks: lanes of striped colour blocks streaming into a vortex ---- */
+function spiralGen(){
+  const st={i:0}; let rot=0, flow=0, tw=1.1, shuf=0;
+  return { draw(g,w,h,c){
+    const A=c.A, sty=nlStyle('spiral',st,c), cols=sty.cols, cx=w/2, cy=h/2, R=Math.hypot(w,h)*.56;
+    rot+=c.dt*(.05+A.level*.3)*(.5+c.speed); flow+=c.dt*(.5+A.mid*2)*(.5+c.speed);
+    tw+=((1.05+A.bass*.55)-tw)*Math.min(1,c.dt*3); if (c.beat) shuf++;
+    g.fillStyle=sty.bg; g.fillRect(0,0,w,h);
+    const lanes=NL_COARSE?64:96, paths=cols.map(()=>new Path2D()), line=new Path2D(), du=.085, u0=Math.log(R*.015), u1=Math.log(R)+.1, fl=Math.floor(flow), ff=flow-fl;
+    const da=6.2832/lanes, pt=(u,a)=>{ const r=Math.exp(u), th=a+rot-tw*u; return [cx+Math.cos(th)*r, cy+Math.sin(th)*r]; };
+    for (let L=0;L<lanes;L++){ const a0=L*da, lh=nlHash(L*7.31+.5);
+      if (lh<.1){ let first=true; for (let u=u0;u<=u1;u+=.04){ const p=pt(u,a0); if (first){ line.moveTo(p[0],p[1]); first=false; } else line.lineTo(p[0],p[1]); } continue; }
+      const half=da*(.3+.17*nlHash(L*3.17)), lshuf=nlHash(L*1.7+shuf*.137)<.18?shuf*31:0;
+      for (let n=-1;n*du+u0<u1;n++){ const id=n-fl, hh=nlHash(L*13.1+id*7.7+lshuf); if (hh<.14) continue;
+        const ua=u0+(n+ff)*du, ub=ua+du*(.6+.36*nlHash(L*5.3+id*1.9)), p=paths[Math.floor(nlHash(L*2.9+id*11.3+lshuf*.5)*cols.length)];
+        const q1=pt(ua,a0-half), q2=pt(ub,a0-half), q3=pt(ub,a0+half), q4=pt(ua,a0+half);
+        p.moveTo(q1[0],q1[1]); p.lineTo(q2[0],q2[1]); p.lineTo(q3[0],q3[1]); p.lineTo(q4[0],q4[1]); p.closePath(); } }
+    cols.forEach((col,i)=>{ g.fillStyle=col; g.fill(paths[i]); });
+    g.strokeStyle=cols[2]; g.lineWidth=Math.max(1,Math.min(w,h)/500); g.stroke(line);
+  }}; }
+
+/* ---- Orbs & trails: glass orbs on a warm gradient, leaving tube trails when the beat throws them ---- */
+function trailGen(){
+  const st={i:0}; let O=null, H=null, t=0;
+  return { draw(g,w,h,c){
+    const A=c.A, M=Math.min(w,h), sty=nlStyle('orbs',st,c), cols=sty.cols;
+    if (!O){ O=Array.from({length:NL_COARSE?16:22},(_,i)=>({x:c.rnd()*w, y:c.rnd()*h, vx:(c.rnd()-.5)*M*.1, vy:(c.rnd()-.5)*M*.1, r:M*(.022+c.rnd()*c.rnd()*.1), ci:i, ring:c.rnd()<.45, pin:c.rnd()<.4, tx:0, ty:0}));
+      O.forEach(o=>{ o.tx=o.x; o.ty=o.y; }); H=Array.from({length:3},()=>({x:c.rnd(),y:c.rnd(),r:.25+c.rnd()*.2,ph:c.rnd()*6.28})); }
+    t+=c.dt*(.5+c.speed);
+    const gr=g.createLinearGradient(0,0,w,h); gr.addColorStop(0,sty.bg[0]); gr.addColorStop(1,sty.bg[1]); g.fillStyle=gr; g.fillRect(0,0,w,h);
+    for (const b of H){ const x=(b.x+.08*Math.sin(t*.2+b.ph))*w, y=(b.y+.08*Math.cos(t*.17+b.ph))*h, r=b.r*M*(1+A.bass*.15);
+      const rg=g.createRadialGradient(x,y,0,x,y,r); rg.addColorStop(0,hexA(sty.halo,.42)); rg.addColorStop(.7,hexA(sty.halo,.3)); rg.addColorStop(1,hexA(sty.halo,0)); g.fillStyle=rg; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); }
+    if (c.beat){ const k=1+Math.floor(c.rnd()*3); for (let j=0;j<k;j++){ const o=O[Math.floor(c.rnd()*O.length)], a=c.rnd()*6.2832, sp=M*(.6+A.bass*1.4); o.vx+=Math.cos(a)*sp; o.vy+=Math.sin(a)*sp; } }
+    const damp=Math.pow(.5,c.dt);
+    for (const o of O){ o.vx=o.vx*damp+Math.sin(t*.7+o.ci)*M*.02*c.dt; o.vy=o.vy*damp+Math.cos(t*.6+o.ci*1.3)*M*.02*c.dt;
+      o.x+=o.vx*c.dt; o.y+=o.vy*c.dt;
+      if (o.x<o.r){ o.x=o.r; o.vx=Math.abs(o.vx); } if (o.x>w-o.r){ o.x=w-o.r; o.vx=-Math.abs(o.vx); }
+      if (o.y<o.r){ o.y=o.r; o.vy=Math.abs(o.vy); } if (o.y>h-o.r){ o.y=h-o.r; o.vy=-Math.abs(o.vy); }
+      const k=Math.min(1,c.dt*1.6); o.tx+=(o.x-o.tx)*k; o.ty+=(o.y-o.ty)*k; }
+    g.lineCap='round';
+    for (const o of O){ const col=cols[o.ci%cols.length], r=o.r*(1+A.bass*.25), d=Math.hypot(o.x-o.tx,o.y-o.ty);
+      if (o.pin){ g.strokeStyle=hexA('#000000',.35); g.lineWidth=Math.max(1,M/900); g.beginPath(); g.moveTo(o.x,o.y); g.lineTo(o.x+r*.3,o.y+r*5); g.stroke();
+        g.fillStyle=hexA(col,.9); g.beginPath(); g.arc(o.x+r*.3,o.y+r*5,Math.max(2,r*.12),0,6.2832); g.fill(); }
+      if (d>r*.4){ const tg=g.createLinearGradient(o.tx,o.ty,o.x,o.y); tg.addColorStop(0,hexA(col,0)); tg.addColorStop(1,hexA(col,.55));
+        g.strokeStyle=tg; g.lineWidth=r*1.9; g.beginPath(); g.moveTo(o.tx,o.ty); g.lineTo(o.x,o.y); g.stroke(); } }
+    for (const o of O){ const col=cols[o.ci%cols.length], r=o.r*(1+A.bass*.25);
+      const bg=g.createRadialGradient(o.x-r*.35,o.y-r*.4,r*.05,o.x,o.y,r); bg.addColorStop(0,mixc(col,'#ffffff',.65)); bg.addColorStop(.55,col); bg.addColorStop(1,mixc(col,'#000000',.45));
+      g.globalAlpha=.92; g.fillStyle=bg; g.beginPath(); g.arc(o.x,o.y,r,0,6.2832); g.fill(); g.globalAlpha=1;
+      if (o.ring){ g.strokeStyle=hexA(cols[(o.ci+2)%cols.length],.85); g.lineWidth=r*.14; g.beginPath(); g.arc(o.x,o.y,r*.55,0,6.2832); g.stroke();
+        g.fillStyle=cols[(o.ci+3)%cols.length]; g.beginPath(); g.arc(o.x,o.y,r*.18*(1+A.high),0,6.2832); g.fill(); }
+      g.fillStyle='rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(o.x-r*.38,o.y-r*.42,r*.22,r*.12,-.7,0,6.2832); g.fill(); }
+  }}; }
+
+/* ---- Sticker blobs: flat-colour blobs inside jagged comic rings; the spikes follow the sound wave ---- */
+function stickerGen(){
+  const st={i:0}; let B=null, t=0;
+  return { draw(g,w,h,c){
+    const A=c.A, M=Math.min(w,h), sty=nlStyle('stick',st,c), wave=c.wave;
+    if (!B){ const cols=w>=h?4:3, rows=w>=h?3:4; B=[]; for (let j=0;j<rows;j++) for (let i=0;i<cols;i++){ const hx_=(i+.5+(c.rnd()-.5)*.5)/cols, hy=(j+.5+(c.rnd()-.5)*.5)/rows;
+      B.push({x:hx_, y:hy, hx:hx_, hy, r:.1+c.rnd()*.08, ci:B.length, ph:c.rnd()*6.28, pulse:0, seed:c.rnd()*100}); } }
+    t+=c.dt*(.4+c.speed);
+    if (c.beat){ const b=B[Math.floor(c.rnd()*B.length)]; b.pulse=1; b.ci+=1+Math.floor(c.rnd()*3); }
+    for (const b of B){ b.pulse*=Math.pow(.08,c.dt); b.x+=(b.hx+.04*Math.sin(t*.3+b.ph)-b.x)*c.dt*.5; b.y+=(b.hy+.04*Math.cos(t*.25+b.ph*1.3)-b.y)*c.dt*.5;
+      for (const o of B) if (o!==b){ const dx=b.x-o.x, dy=(b.y-o.y)*h/w, d=Math.hypot(dx,dy)+1e-3, m=(b.r+o.r)*.9*M/w; if (d<m){ b.x+=dx/d*(m-d)*.05; b.y+=dy/d*(m-d)*.05; } }
+      b.x=Math.min(.95,Math.max(.05,b.x)); b.y=Math.min(.95,Math.max(.05,b.y)); }
+    g.fillStyle=sty.bg; g.fillRect(0,0,w,h);
+    const jit=Math.floor(t*(2+A.high*10)), n=NL_COARSE?60:84;
+    const ring=(sc,amp,k)=>{ const p=new Path2D();
+      for (const b of B){ const cx=b.x*w, cy=b.y*h, R=b.r*M*(1+b.pulse*.25+A.bass*.12)*sc;
+        for (let i=0;i<=n;i++){ const a=i/n*6.2832, wv=wave?Math.abs(wave[(i*23+b.ci*97+k*311)%wave.length])*4:0, hh=nlHash(b.seed+i*1.3+k*7+jit*.01*(i%3));
+          const rr=R*(i%2? 1-amp*(.2+.5*hh) : 1+amp*(.3+.7*hh+Math.min(1.5,wv)));
+          i?p.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr):p.moveTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr); } p.closePath(); }
+      return p; };
+    g.fillStyle=sty.r1; g.fill(ring(1.75,.2,1));
+    g.fillStyle=sty.r2; g.fill(ring(1.45,.14,2));
+    const r3=ring(1.22,.09,3); g.fillStyle=sty.r3; g.fill(r3); g.strokeStyle=sty.ln; g.lineWidth=Math.max(1,M/500); g.stroke(r3);
+    g.setLineDash([Math.max(2,M/260),Math.max(2,M/260)]); g.lineWidth=Math.max(1,M/700);
+    for (const b of B){ g.beginPath(); g.arc(b.x*w,b.y*h,b.r*M*(1+b.pulse*.25+A.bass*.12)*1.05,0,6.2832); g.stroke(); }
+    g.setLineDash([]);
+    for (const b of B){ const cx=b.x*w, cy=b.y*h, R=b.r*M*(1+b.pulse*.35+A.bass*.15)*.78, p=new Path2D();
+      for (let i=0;i<=40;i++){ const a=i/40*6.2832, rr=R*(1+.12*Math.sin(a*3+b.ph+t*.6)+.06*Math.sin(a*5-t));
+        i?p.lineTo(cx+Math.cos(a)*rr*1.05,cy+Math.sin(a)*rr*.95):p.moveTo(cx+Math.cos(a)*rr*1.05,cy+Math.sin(a)*rr*.95); }
+      g.fillStyle=sty.cores[b.ci%sty.cores.length]; g.fill(p); g.lineWidth=Math.max(1,M/600); g.strokeStyle=sty.ln; g.stroke(p); }
+  }}; }
+
+/* ---- Voxel relief: an isometric block terrain; bass lifts it, beats send ripples out from the centre ---- */
+function voxelGen(){
+  const st={i:0}; let t=0, rings=[];
+  return { draw(g,w,h,c){
+    const A=c.A, sty=nlStyle('vox',st,c), n=NL_COARSE?30:44;
+    t+=c.dt*(.25+A.mid*.7)*(.5+c.speed);
+    if (c.beat) rings.push({r:0, a:.6+A.bass}); rings=rings.filter(r=>(r.r+=c.dt*n*.45)<n*1.2);
+    const tw=Math.max(w*1.25/(2*n), h*1.5/n), th=tw*.5, x0=w/2, y0=h/2-n*th*.98, step=th*.5;
+    g.fillStyle=sty.bg; g.fillRect(0,0,w,h);
+    const Z=new Float32Array(n*n);
+    for (let j=0;j<n;j++) for (let i=0;i<n;i++){ const u=i/n, v=j/n;
+      let z=Math.sin(u*5.1+t*.7)*Math.cos(v*4.3-t*.5)+.6*Math.sin((u+v)*7.3-t*.9)+.45*Math.sin(u*13.1-v*11.7+t*1.3)+.3*Math.sin(u*23.-t)*Math.sin(v*19.+t*.8);
+      z=(z+1.9)*.5*(1.2+A.level*1.6+A.bass*1.2);
+      const dc=Math.hypot(i-n/2,j-n/2); for (const r of rings) z+=r.a*2.2*Math.exp(-Math.pow((dc-r.r)/1.6,2))*(1-r.r/(n*1.2));
+      Z[j*n+i]=Math.max(0,Math.round(z*z*1.6))*step; }
+    const lv=4, faces=['top','left','right'];
+    for (let d=0;d<=2*(n-1);d++){
+      const P=faces.map(()=>Array.from({length:lv},()=>new Path2D()));
+      for (let i=Math.max(0,d-n+1);i<=Math.min(n-1,d);i++){ const j=d-i, z=Z[j*n+i], x=x0+(i-j)*tw, Yb=y0+(i+j)*th, Y=Yb-z;
+        const q=Math.min(lv-1,Math.floor(z/(th*10)*lv));
+        const T=P[0][q]; T.moveTo(x,Y-th); T.lineTo(x+tw,Y); T.lineTo(x,Y+th); T.lineTo(x-tw,Y); T.closePath();
+        const Lp=P[1][q]; Lp.moveTo(x-tw,Y); Lp.lineTo(x,Y+th); Lp.lineTo(x,Yb+th); Lp.lineTo(x-tw,Yb); Lp.closePath();
+        const Rp=P[2][q]; Rp.moveTo(x+tw,Y); Rp.lineTo(x,Y+th); Rp.lineTo(x,Yb+th); Rp.lineTo(x+tw,Yb); Rp.closePath(); }
+      for (let q=0;q<lv;q++){ const k=q/(lv-1)*.6;
+        g.fillStyle=mixc(sty.left,sty.peak,k*.5); g.fill(P[1][q]); g.fillStyle=mixc(sty.right,sty.peak,k*.35); g.fill(P[2][q]); g.fillStyle=mixc(sty.top,sty.peak,k); g.fill(P[0][q]); } }
+  }}; }
+(function(){
+  const row=$('nlRow'); if (!row) return;
+  const nl=S.nl||(S.nl={});
+  row.querySelectorAll('select[data-nl]').forEach(sel=>{ const k=sel.dataset.nl;
+    sel.innerHTML='<option value="auto">Auto</option>'+Object.keys(NL_STYLES[k]).map(n=>`<option>${n}</option>`).join('');
+    sel.value=nl[k]&&NL_STYLES[k][nl[k]]?nl[k]:'auto';
+    sel.onchange=()=>{ S.nl=Object.assign({},S.nl||{},{[k]:sel.value}); save(); }; });
 })();
 /* ============================================================
    Sampler (video + sound): a clip or a sound file (loaded, or recorded) cut into slices at its sound hits
